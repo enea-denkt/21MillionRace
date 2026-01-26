@@ -11,6 +11,7 @@ const ENEMY_FOOT_SHIFT = 0;
 const PLAYER_Y_BASE = 430;
 const PLAYER_Y_OFFSET = (PLAYER_BASE_H * (SCALE - 1)) / 2;
 const COIN_VALUES = [20, 50, 100, 150, 200, 250, 300, 500, 1000, 1500, 2000, 5000, 10000, 15000, 20000];
+const BTC_CAP = 21000000;
 const CHART_WIDTH = 240;
 const CHART_HEIGHT = 80;
 const BG_SCALE = 0.7;
@@ -45,6 +46,7 @@ class GameScene extends Phaser.Scene {
     this.createTextures();
     this.processSaylorTexture();
     this.createBackground();
+    this.levelNumber = 1;
 
     this.platforms = this.physics.add.staticGroup();
     this.movingPlatforms = this.physics.add.group({
@@ -361,32 +363,7 @@ class GameScene extends Phaser.Scene {
     ];
     platforms.forEach(([x, y, w, t]) => addPlatform(x, y, w, t));
 
-    const movers = [
-      { x: 2700, y: 380, w: 140, h: 20, data: { startX: 2580, endX: 2820, speed: 0.0012, axis: "x" } },
-      { x: 3400, y: 360, w: 140, h: 20, data: { startX: 3280, endX: 3520, speed: 0.0014, axis: "x" } },
-      { x: 4760, y: 340, w: 130, h: 20, data: { startY: 320, endY: 420, speed: 0.0011, axis: "y" } },
-      { x: 5400, y: 340, w: 130, h: 20, data: { startX: 5280, endX: 5520, speed: 0.0015, axis: "x" } },
-      { x: 7600, y: 400, w: 140, h: 20, data: { startX: 7480, endX: 7720, speed: 0.0014, axis: "x" } },
-      { x: 8200, y: 360, w: 140, h: 20, data: { startY: 340, endY: 440, speed: 0.0012, axis: "y" } },
-      { x: 8800, y: 360, w: 150, h: 20, data: { startX: 8680, endX: 8920, speed: 0.0015, axis: "x" } },
-      { x: 10250, y: 360, w: 140, h: 20, data: { startY: 340, endY: 430, speed: 0.0013, axis: "y" } },
-      { x: 11000, y: 340, w: 140, h: 20, data: { startX: 10860, endX: 11140, speed: 0.0016, axis: "x" } },
-      { x: 11800, y: 340, w: 140, h: 20, data: { startY: 320, endY: 420, speed: 0.0013, axis: "y" } },
-      { x: 12500, y: 340, w: 140, h: 20, data: { startX: 12360, endX: 12640, speed: 0.0016, axis: "x" } },
-      { x: 13150, y: 320, w: 130, h: 20, data: { startX: 13050, endX: 13250, speed: 0.0018, axis: "x" } },
-      { x: 14250, y: 300, w: 130, h: 20, data: { startX: 14150, endX: 14350, speed: 0.0018, axis: "x" } },
-      { x: 14950, y: 300, w: 130, h: 20, data: { startY: 280, endY: 360, speed: 0.0014, axis: "y" } },
-      { x: 15750, y: 280, w: 130, h: 20, data: { startX: 15620, endX: 15880, speed: 0.0019, axis: "x" } },
-      { x: 16550, y: 270, w: 130, h: 20, data: { startY: 250, endY: 330, speed: 0.0016, axis: "y" } },
-      { x: 17350, y: 260, w: 130, h: 20, data: { startX: 17220, endX: 17480, speed: 0.0020, axis: "x" } },
-    ];
-    movers.forEach((m) => {
-      if (overlapsSpan(m.x, m.w)) return;
-      const p = this.movingPlatforms.create(m.x, m.y, "platform");
-      p.setDisplaySize(m.w, m.h);
-      p.setData(m.data);
-      pushSpan(m.x, m.w);
-    });
+    // Moving platforms removed per request
 
     // Insert fragile platforms only to bridge big gaps (>200) between static platforms
     const ordered = platforms.slice().sort((a, b) => a[0] - b[0]);
@@ -414,10 +391,13 @@ class GameScene extends Phaser.Scene {
     });
 
     this.coinTextMap = new Map();
+    this.btcCapRemaining = BTC_CAP;
 
-    const randomCoinValue = (forcedValue, maxCap) => {
+    const randomCoinValue = (forcedValue, maxCap, remainingCap) => {
+      const capRemaining = remainingCap !== undefined ? remainingCap : BTC_CAP;
+      if (capRemaining <= 0) return 0;
       if (forcedValue !== undefined) {
-        return forcedValue;
+        return Math.min(forcedValue, capRemaining);
       }
       const capFilter = (arr) => (maxCap ? arr.filter((v) => v < maxCap) : arr);
       const low = capFilter(COIN_VALUES.filter((v) => v > 20 && v < 500));
@@ -438,13 +418,18 @@ class GameScene extends Phaser.Scene {
       if (!pool.length) {
         pool = COIN_VALUES;
       }
-      return Phaser.Utils.Array.GetRandom(pool);
+      let pick = Phaser.Utils.Array.GetRandom(pool);
+      pick = Math.min(pick, capRemaining);
+      return pick;
     };
 
     let coinCount = 0;
     const makeCoin = (x, y, forcedValue) => {
+      if (this.btcCapRemaining <= 0) return null;
       const cap = coinCount < 10 ? 1000 : undefined;
-      const value = randomCoinValue(forcedValue, cap);
+      const value = randomCoinValue(forcedValue, cap, this.btcCapRemaining);
+      if (value <= 0) return null;
+      this.btcCapRemaining -= value;
       coinCount += 1;
       const isBig = value >= 1000;
       const key = isBig ? "coin_big" : "coin_small";
@@ -724,7 +709,7 @@ class GameScene extends Phaser.Scene {
       color: "#fa660f",
     }).setScrollFactor(0);
 
-    this.hudLives = this.add.text(WIDTH - 16, 12, "♥♥♥  1-1", {
+    this.hudLives = this.add.text(WIDTH - 16, 12, "♥♥♥", {
       fontFamily: "Trebuchet MS",
       fontSize: "18px",
       color: "#fa660f",
@@ -775,7 +760,8 @@ class GameScene extends Phaser.Scene {
 
     this.physics.add.overlap(this.player, this.coins, (player, coin) => {
       const value = coin.getData("value") || 1;
-      this.stats.btc += value;
+      const canGain = Math.min(value, BTC_CAP - this.stats.btc);
+      this.stats.btc += canGain;
       this.addBtcHistory(this.stats.btc);
       this.updateHud();
 
@@ -1204,7 +1190,7 @@ class GameScene extends Phaser.Scene {
   updateHud() {
     this.hudBtc.setText(`BTC: ${this.stats.btc}`);
     const hearts = "♥".repeat(Math.max(this.lives, 0));
-    this.hudLives.setText(`${hearts}  1-1`);
+    this.hudLives.setText(`${hearts}`);
     this.updateBtcChart();
   }
 
@@ -1284,7 +1270,7 @@ class GameScene extends Phaser.Scene {
     }
 
     // Big orange text
-    const label = this.add.text(WIDTH / 2, HEIGHT / 2, "Level 1 Complete!", {
+    const label = this.add.text(WIDTH / 2, HEIGHT / 2, `Level ${this.levelNumber || 1} Complete!`, {
       fontFamily: "Trebuchet MS",
       fontSize: "36px",
       color: "#fa660f",
@@ -1310,6 +1296,7 @@ class GameScene extends Phaser.Scene {
       onComplete: () => {
         label.destroy();
         this.portalCelebrating = false;
+        this.levelNumber = (this.levelNumber || 1) + 1;
       },
     });
   }
@@ -1433,3 +1420,12 @@ const config = {
 };
 
 new Phaser.Game(config);
+      // Ensure we still have travel distance
+      if (adjusted.axis === "x" && Math.abs(adjusted.endX - adjusted.startX) < 10) {
+        adjusted.startX = m.x - 60;
+        adjusted.endX = m.x + 60;
+      }
+      if (adjusted.axis === "y" && Math.abs(adjusted.endY - adjusted.startY) < 10) {
+        adjusted.startY = (m.data?.startY ?? m.y) - 60;
+        adjusted.endY = (m.data?.endY ?? m.y) + 60;
+      }
