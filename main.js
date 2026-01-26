@@ -809,10 +809,10 @@ class GameScene extends Phaser.Scene {
     this.player.body.updateFromGameObject();
     this.player.body.syncBounds = true;
     // TEMP spawn override for testing thin platform///
-    const testX = 8000;
-    const testY = 200;
-    this.player.setPosition(testX, testY);
-    this.checkpointPos = { x: testX, y: testY };
+    //const testX = 8000;
+    //const testY = 200;
+    //this.player.setPosition(testX, testY);
+    //this.checkpointPos = { x: testX, y: testY };
     //////
     this.player.body.setCollideWorldBounds(true);
     this.player.body.onWorldBounds = true;
@@ -1627,14 +1627,8 @@ class GameScene extends Phaser.Scene {
     const doRestart = () => {
       if (this.restarting) return;
       this.restarting = true;
-      // Stop and start fresh to clear paused state
-      try {
-        this.scene.stop();
-        this.scene.start("GameScene");
-      } catch (e) {
-        // Hard fallback if restart fails
-        window.location.reload();
-      }
+      // Hard reload to guarantee a fresh state
+      window.location.reload();
     };
     this.time.addEvent({ delay: 1200, callback: doRestart, callbackScope: this, loop: false, paused: false });
     this.input.keyboard.once("keydown", doRestart);
