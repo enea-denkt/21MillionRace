@@ -1605,25 +1605,42 @@ class GameScene extends Phaser.Scene {
     this.levelComplete = true;
     this.player.body.setVelocity(0, 0);
     this.physics.pause();
+    this.restarting = false;
 
     const overlay = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x05070d, 0.85)
       .setOrigin(0, 0)
       .setScrollFactor(0)
-      .setDepth(2000);
+      .setDepth(2000)
+      .setInteractive({ useHandCursor: true });
 
-    this.add.text(WIDTH / 2, HEIGHT / 2 - 20, "Out of Lives!\nPress R to Retry", {
+    this.add.text(WIDTH / 2, HEIGHT / 2 - 20, "GAME OVER", {
       fontFamily: "Trebuchet MS",
-      fontSize: "22px",
-      color: "#ffe0e0",
+      fontSize: "36px",
+      color: "#fa660f",
       align: "center",
       lineSpacing: 8,
     }).setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(2001);
 
-    this.input.keyboard.once("keydown-R", () => {
-      this.scene.restart();
-    });
+    // Auto-restart and allow input to trigger restart
+    const doRestart = () => {
+      if (this.restarting) return;
+      this.restarting = true;
+      // Stop and start fresh to clear paused state
+      try {
+        this.scene.stop();
+        this.scene.start("GameScene");
+      } catch (e) {
+        // Hard fallback if restart fails
+        window.location.reload();
+      }
+    };
+    this.time.addEvent({ delay: 1200, callback: doRestart, callbackScope: this, loop: false, paused: false });
+    this.input.keyboard.once("keydown", doRestart);
+    overlay.once("pointerdown", doRestart);
+    // Fallback tap/click anywhere
+    this.input.once("pointerdown", doRestart);
   }
 
   checkDesktopOnly() {
