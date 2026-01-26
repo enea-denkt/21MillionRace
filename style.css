@@ -18,6 +18,16 @@ body {
   color: #e8f6ff;
 }
 
+#app, .layout {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 12px 24px;
+}
+
 #game {
   width: min(100vw, 960px);
   height: min(100vh, 540px);
@@ -30,4 +40,50 @@ canvas {
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
+}
+
+#donate {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.donate-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  color: #fa660f;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+  background: #0f1424;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(250, 102, 15, 0.35);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.donate-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.donate-text h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.donate-text p {
+  margin: 0;
+  color: #e8f6ff;
+  font-size: 14px;
+}
+
+.donate-card img {
+  max-width: 60px;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid rgba(250, 102, 15, 0.35);
+  background: #fff;
 }
