@@ -30,6 +30,24 @@ class GameScene extends Phaser.Scene {
   preload() {
     this.load.image("saylor", "assets/Saylor.png");
     this.load.image("bg_manhattan", "assets/background-digital-manhattan.png");
+    this.load.image("shortjim", "assets/ShortJim.png");
+    this.createArrowTexture = () => {
+      if (this.textures.exists("shortjim_arrow")) return;
+      const g = this.add.graphics();
+      g.lineStyle(2, 0xff2f2f, 1);
+      g.fillStyle(0xff6b6b, 1);
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(14, -6);
+      g.lineTo(28, 0);
+      g.lineTo(14, 6);
+      g.closePath();
+      g.fillPath();
+      g.strokePath();
+      g.generateTexture("shortjim_arrow", 30, 14);
+      g.destroy();
+    };
+    this.load.image("jim_arrow", "assets/JimArrow.png");
     this.monsterTypes = [
       { key: "monster_doge", label: "", file: "doge.png" },
       { key: "monster_eth", label: "", file: "eth.png" },
@@ -59,6 +77,7 @@ class GameScene extends Phaser.Scene {
     this.createLevel();
     this.createCollectibles();
     this.createEnemies();
+    this.enemyProjectiles = this.physics.add.group({ allowGravity: false, immovable: false });
     this.createPlayer();
     this.createCheckpoint();
     this.createPortal();
@@ -68,6 +87,8 @@ class GameScene extends Phaser.Scene {
     this.setupColliders();
     this.portalCelebrating = false;
     this.startIntro();
+    this.shortJimSpawned = false;
+    this.shortJimWaveSpawned = false;
 
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
@@ -165,6 +186,25 @@ class GameScene extends Phaser.Scene {
       g.fillStyle(PRIMARY, 1);
       g.fillRoundedRect(4, 6, 16, 12, 4);
     });
+
+    // Simple circular blast particle for ShortJim explosions
+    makeTexture("shortjim_blast", 12, 12, (g) => {
+      g.fillStyle(0xffc040, 1);
+      g.fillCircle(6, 6, 5);
+      g.fillStyle(0xfff6a0, 0.8);
+      g.fillCircle(6, 6, 3);
+    });
+
+    // Small fire puff for explosions
+    makeTexture("shortjim_fire", 10, 14, (g) => {
+      g.fillStyle(0xff7a1f, 1);
+      g.fillEllipse(5, 9, 6, 10);
+      g.fillStyle(0xffc85a, 0.9);
+      g.fillEllipse(5, 7, 4, 6);
+      g.fillStyle(0xffffff, 0.6);
+      g.fillEllipse(5, 5, 2, 3);
+    });
+
 
     makeTexture("portal", 44, 70, (g) => {
       g.fillStyle(PRIMARY, 0.12);
@@ -564,7 +604,74 @@ class GameScene extends Phaser.Scene {
     this.enemies = this.physics.add.group();
     this.physics.add.collider(this.enemies, this.platforms);
     this.enemyTextMap = new Map();
+    this.shortJimWaveScheduled = false;
 
+    const baseSpawns = [
+      [180, 520, 120, 240],
+      [380, 520, 320, 440],
+      [700, 520, 620, 780],
+      [1050, 520, 970, 1130],
+      [1300, 520, 1220, 1380],
+      [1700, 520, 1620, 1780],
+      [1500, 420, 1400, 1620],
+      [1680, 420, 1600, 1760],
+      [1860, 420, 1760, 1940],
+      [2060, 420, 1980, 2140],
+      [2300, 420, 2200, 2420],
+      [2600, 420, 2500, 2720],
+      [3200, 420, 3120, 3320],
+      [3400, 420, 3280, 3520],
+      [3800, 400, 3700, 3920],
+      [4300, 400, 4200, 4420],
+      [4550, 400, 4460, 4660],
+      [4760, 400, 4680, 4840],
+      [5200, 380, 5120, 5320],
+      [5600, 360, 5500, 5720],
+      [6000, 420, 5900, 6100],
+      [6200, 420, 6120, 6320],
+      [6400, 400, 6300, 6500],
+      [6600, 400, 6500, 6700],
+      [6800, 380, 6680, 6920],
+      [7000, 380, 6900, 7100],
+      [7200, 360, 7100, 7300],
+      [7600, 340, 7480, 7720],
+      [7800, 340, 7700, 7900],
+      [8000, 330, 7900, 8100],
+      [8200, 360, 8080, 8320],
+      [8600, 340, 8480, 8720],
+      [8800, 340, 8700, 8900],
+      [9000, 320, 8880, 9120],
+      [9400, 320, 9300, 9500],
+      [9800, 320, 9680, 9920],
+      [10100, 320, 10000, 10200],
+      [10500, 300, 10400, 10600],
+      [10400, 300, 10300, 10500],
+      [11000, 300, 10900, 11100],
+      [11200, 300, 11100, 11300],
+      [11600, 300, 11500, 11700],
+      [11800, 300, 11700, 11900],
+      [12200, 280, 12100, 12300],
+      [12400, 280, 12300, 12500],
+      [12800, 280, 12700, 12900],
+      [13000, 280, 12900, 13100],
+      [13400, 260, 13300, 13500],
+      [13600, 260, 13500, 13700],
+      [14000, 260, 13900, 14100],
+      [14200, 260, 14100, 14300],
+      [14600, 240, 14500, 14700],
+      [14800, 240, 14700, 14900],
+      [15200, 240, 15100, 15300],
+      [15400, 240, 15300, 15500],
+      [15800, 220, 15700, 15900],
+      [16000, 220, 15900, 16100],
+      [16400, 220, 16300, 16500],
+      [16600, 220, 16500, 16700],
+      [17000, 200, 16900, 17100],
+      [17200, 200, 17100, 17300],
+      [17450, 200, 17350, 17550],
+      [17650, 200, 17550, 17750],
+    ];
+    this.baseEnemySpawns = baseSpawns;
     const spawnEnemy = (x, y, leftBound, rightBound) => {
       const type = Phaser.Utils.Array.GetRandom(this.monsterTypes);
       const enemy = this.enemies.create(x, y, type.key).setOrigin(0.5, 1);
@@ -593,6 +700,33 @@ class GameScene extends Phaser.Scene {
       this.enemyTextMap.set(enemy, text);
       return enemy;
     };
+    this.spawnEnemyHelper = spawnEnemy;
+
+    this.spawnShortJim = (x, y) => {
+      const enemy = this.enemies.create(x, y, "shortjim").setOrigin(0.5, 1);
+      // Use native sprite size (no rescale) and custom body
+      enemy.body.setSize(enemy.width * 0.6, enemy.height * 0.9);
+      enemy.body.setOffset(
+        (enemy.displayWidth - enemy.body.width) / 2,
+        enemy.displayHeight - enemy.body.height
+      );
+      enemy.body.allowGravity = false; // don't fall into gaps
+      enemy.setData("leftBound", 0);
+      enemy.setData("rightBound", this.worldWidth);
+      enemy.setData("speed", 100);
+      enemy.setData("chaseRange", 1200);
+      enemy.setData("dir", 1);
+      enemy.setData("type", "shortjim");
+      enemy.setData("shieldHP", 3);
+      enemy.setData("lastShot", 0);
+      const text = this.add.text(x, y - 2, "ShortJim", {
+        fontFamily: "Trebuchet MS",
+        fontSize: "12px",
+        color: "#fa660f",
+      }).setOrigin(0.5);
+      this.enemyTextMap.set(enemy, text);
+      return enemy;
+    };
 
     // Act I/early enemies
     spawnEnemy(180, 520, 120, 240);
@@ -600,8 +734,11 @@ class GameScene extends Phaser.Scene {
     spawnEnemy(700, 520, 620, 780);
     spawnEnemy(1050, 520, 970, 1130);
     spawnEnemy(1300, 520, 1220, 1380);
+    spawnEnemy(1700, 520, 1620, 1780);
     spawnEnemy(1500, 420, 1400, 1620);
+    spawnEnemy(1680, 420, 1600, 1760);
     spawnEnemy(1860, 420, 1760, 1940);
+    spawnEnemy(2060, 420, 1980, 2140);
     spawnEnemy(2300, 420, 2200, 2420);
     spawnEnemy(2600, 420, 2500, 2720);
     spawnEnemy(3200, 420, 3120, 3320);
@@ -670,7 +807,7 @@ class GameScene extends Phaser.Scene {
     this.player.body.updateFromGameObject();
     this.player.body.syncBounds = true;
     // TEMP spawn override for testing thin platform
-    const testX = 9000;
+    const testX = 8000;
     const testY = 360;
     this.player.setPosition(testX, testY);
     this.checkpointPos = { x: testX, y: testY };
@@ -781,6 +918,10 @@ class GameScene extends Phaser.Scene {
       }
     });
 
+    this.physics.add.overlap(this.player, this.enemyProjectiles, () => {
+      this.playerHit();
+    });
+
     this.physics.add.collider(this.player, this.enemies, (player, enemy) => {
       if (!enemy.active || this.levelComplete) {
         return;
@@ -829,6 +970,7 @@ class GameScene extends Phaser.Scene {
 
     this.updatePlayer(time);
     this.updateEnemies(time);
+    this.updateEnemyProjectiles();
     this.updateMovingPlatforms(time);
     this.updateBackground();
     this.updateCoinTexts();
@@ -915,11 +1057,12 @@ class GameScene extends Phaser.Scene {
         label.setPosition(enemy.x, enemy.y - 2);
       }
 
+      const isShortJim = enemy.getData("type") === "shortjim";
       const leftBound = enemy.getData("leftBound");
       const rightBound = enemy.getData("rightBound");
       const speed = enemy.getData("speed");
       const chaseRange = enemy.getData("chaseRange");
-      const chaseEnabled = enemy.getData("chaseEnabled");
+      const chaseEnabled = isShortJim ? true : enemy.getData("chaseEnabled");
       let dir = enemy.getData("dir");
       const nearPlayer =
         Math.abs(enemy.x - this.player.x) < chaseRange &&
@@ -938,8 +1081,61 @@ class GameScene extends Phaser.Scene {
         enemy.body.setVelocityX(dir * speed);
       }
 
+      if (isShortJim) {
+        enemy.body.setVelocityY(Phaser.Math.Clamp(this.player.y - enemy.y, -80, 80));
+        if (time - (enemy.getData("lastShot") || 0) > 1200) {
+          this.fireShortJimProjectile(enemy);
+          enemy.setData("lastShot", time);
+        }
+      }
+
       if (enemy.body.velocity.x !== 0) {
         enemy.scaleX = Math.sign(enemy.body.velocity.x);
+      }
+    });
+
+    // Trigger ShortJim spawns for a tougher "level 3" feel
+    if (!this.shortJimSpawned && this.player.x > 4000) {
+      this.shortJimSpawned = true;
+      this.spawnShortJim(this.player.x - 300, this.player.y - 40);
+    }
+    if (!this.shortJimWaveSpawned && this.player.x > 12000) {
+      this.shortJimWaveSpawned = true;
+      this.spawnShortJim(this.player.x - 400, this.player.y - 40);
+      this.spawnShortJim(this.player.x - 200, this.player.y - 60);
+    }
+  }
+
+  fireShortJimProjectile(enemy) {
+    if (!this.player || !enemy.active) return;
+    const arrow = this.enemyProjectiles.create(enemy.x, enemy.y - 20, "jim_arrow").setOrigin(0.5, 0.5);
+    const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+    const speed = 180;
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed;
+    arrow.body.setVelocity(vx, vy);
+    arrow.setData("baseVy", vy);
+    arrow.setData("osc", { phase: Math.random() * Math.PI * 2, amp: 60 });
+    arrow.setDepth(850);
+  }
+
+  updateEnemyProjectiles() {
+    const time = this.time.now;
+    this.enemyProjectiles.children.each((proj) => {
+      if (!proj.active || !proj.body) return;
+      const data = proj.getData("osc");
+      if (data) {
+        const baseVy = proj.getData("baseVy") || proj.body.velocity.y;
+        proj.body.setVelocityY(baseVy + Math.sin(time * 0.02 + data.phase) * data.amp);
+      }
+      if (
+        proj.x < this.cameras.main.scrollX - 200 ||
+        proj.x > this.cameras.main.scrollX + WIDTH + 200 ||
+        proj.x > this.worldWidth + 100 ||
+        proj.y > this.worldHeight + 200 ||
+        proj.y < -200
+      ) {
+        proj.destroy();
       }
     });
   }
@@ -1096,6 +1292,21 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
+    const isShortJim = enemy.getData("type") === "shortjim";
+    const shield = enemy.getData("shieldHP");
+    if (shield && shield > 0) {
+      enemy.setData("shieldHP", shield - 1);
+      const flash = this.tweens.add({
+        targets: enemy,
+        alpha: 0.4,
+        yoyo: true,
+        repeat: 2,
+        duration: 60,
+        onComplete: () => enemy.setAlpha(1),
+      });
+      return;
+    }
+
     this.stats.kills += 1;
     const label = this.enemyTextMap.get(enemy);
     if (label) {
@@ -1105,13 +1316,39 @@ class GameScene extends Phaser.Scene {
 
     enemy.body.enable = false;
     enemy.setVelocity(0, 0);
-    this.tweens.add({
-      targets: enemy,
-      scaleY: 0.2,
-      alpha: 0,
-      duration: 220,
-      onComplete: () => enemy.destroy(),
-    });
+    if (isShortJim) {
+      const emitter = this.add.particles(enemy.x, enemy.y, "shortjim_blast", {
+        speed: { min: 120, max: 200 },
+        lifespan: 420,
+        scale: { start: 0.7, end: 0 },
+        gravityY: 140,
+        quantity: 12,
+        angle: { min: 0, max: 360 },
+        blendMode: "ADD",
+      });
+      const fire = this.add.particles(enemy.x, enemy.y, "shortjim_fire", {
+        speed: { min: 80, max: 140 },
+        lifespan: 360,
+        scale: { start: 0.6, end: 0 },
+        gravityY: 200,
+        quantity: 14,
+        angle: { min: 0, max: 360 },
+        blendMode: "ADD",
+      });
+      this.time.delayedCall(500, () => {
+        emitter.destroy();
+        fire.destroy();
+      });
+      enemy.destroy();
+    } else {
+      this.tweens.add({
+        targets: enemy,
+        scaleY: 0.2,
+        alpha: 0,
+        duration: 220,
+        onComplete: () => enemy.destroy(),
+      });
+    }
     this.playTone(280, 0.08);
   }
 
@@ -1126,7 +1363,12 @@ class GameScene extends Phaser.Scene {
 
     if (target) {
       targetPoint = { x: target.x, y: target.y };
-      this.defeatEnemy(target);
+      const shield = target.getData("shieldHP");
+      if (shield && shield > 0) {
+        this.defeatEnemy(target); // will only chip shield
+      } else {
+        this.defeatEnemy(target);
+      }
     } else {
       targetPoint = {
         x: this.player.x + this.facing * 700,
