@@ -56,10 +56,11 @@ canvas {
   color: #fa660f;
   font-family: "Trebuchet MS", "Verdana", sans-serif;
   background: #0f1424;
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-radius: 10px;
   border: 1px solid rgba(250, 102, 15, 0.35);
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+  max-width: 760px;
 }
 
 .donate-text {
@@ -79,11 +80,23 @@ canvas {
   font-size: 14px;
 }
 
+.qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
 .donate-card img {
-  max-width: 60px;
+  max-width: 85px;
   width: 100%;
   height: auto;
   border-radius: 6px;
   border: 1px solid rgba(250, 102, 15, 0.35);
   background: #fff;
+}
+
+.qr-caption {
+  font-size: 10px;
+  color: #e8f6ff;
 }

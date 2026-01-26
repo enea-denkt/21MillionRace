@@ -31,6 +31,7 @@ class GameScene extends Phaser.Scene {
     this.load.image("saylor", "assets/Saylor.png");
     this.load.image("bg_manhattan", "assets/background-digital-manhattan.png");
     this.load.image("shortjim", "assets/ShortJim.png");
+    this.load.image("qr_cta", "assets/QR code.jpg");
     this.createArrowTexture = () => {
       if (this.textures.exists("shortjim_arrow")) return;
       const g = this.add.graphics();
@@ -73,6 +74,7 @@ class GameScene extends Phaser.Scene {
     });
     this.fragilePlatforms = this.physics.add.staticGroup();
     this.bouncePlatforms = this.physics.add.staticGroup();
+    this.enemyTextMap = new Map();
 
     this.createLevel();
     this.createCollectibles();
@@ -80,7 +82,7 @@ class GameScene extends Phaser.Scene {
     this.enemyProjectiles = this.physics.add.group({ allowGravity: false, immovable: false });
     this.createPlayer();
     this.createCheckpoint();
-    this.createPortal();
+    this.createPortals();
     this.createHUD();
     this.createTutorial();
     this.setupInput();
@@ -335,6 +337,10 @@ class GameScene extends Phaser.Scene {
       const platform = this.platforms.create(x, y, texture);
       platform.setDisplaySize(width, texture === "cable" ? 10 : 24);
       platform.refreshBody();
+      if (platform.body) {
+        platform.body.setSize(width, texture === "cable" ? 10 : 24);
+        platform.body.updateFromGameObject();
+      }
       pushSpan(x, width);
       return platform;
     };
@@ -603,12 +609,12 @@ class GameScene extends Phaser.Scene {
   }
 
   createEnemies() {
-    this.enemies = this.physics.add.group();
+    this.enemies = this.physics.add.group({ allowGravity: true, bounceX: 0.1 });
     this.physics.add.collider(this.enemies, this.platforms);
     this.enemyTextMap = new Map();
     this.shortJimWaveScheduled = false;
 
-    const baseSpawns = [
+    let baseSpawns = [
       [180, 520, 120, 240],
       [380, 520, 320, 440],
       [700, 520, 620, 780],
@@ -673,6 +679,9 @@ class GameScene extends Phaser.Scene {
       [17450, 200, 17350, 17550],
       [17650, 200, 17550, 17750],
     ];
+    // Double density by adding a second pass slightly offset
+    const extraSpawns = baseSpawns.map(([x, y, l, r]) => [x + 30, y, l + 30, r + 30]);
+    baseSpawns = baseSpawns.concat(extraSpawns);
     this.baseEnemySpawns = baseSpawns;
     const spawnEnemy = (x, y, leftBound, rightBound) => {
       const type = Phaser.Utils.Array.GetRandom(this.monsterTypes);
@@ -689,7 +698,7 @@ class GameScene extends Phaser.Scene {
       enemy.setData("label", type.label);
       enemy.setData("leftBound", leftBound);
       enemy.setData("rightBound", rightBound);
-      enemy.setData("speed", 40);
+      enemy.setData("speed", 70);
       enemy.setData("chaseRange", 220);
       enemy.setData("chaseEnabled", Phaser.Math.Between(0, 1) === 1);
       enemy.setData("dir", Phaser.Math.Between(0, 1) === 1 ? 1 : -1);
@@ -703,6 +712,26 @@ class GameScene extends Phaser.Scene {
       return enemy;
     };
     this.spawnEnemyHelper = spawnEnemy;
+    this.enemySpawnFlags = { after750: false, level2Extras: false, level3Jims1: false, level3Jims2: false };
+    this.resetEnemies = () => {
+      // clear existing
+      this.enemies.clear(true, true);
+      this.enemyTextMap.forEach((t) => t.destroy());
+      this.enemyTextMap.clear();
+      this.shortJimSpawned = false;
+      this.shortJimWaveSpawned = false;
+      this.enemySpawnFlags = { after750: false, level2Extras: false, level3Jims1: false, level3Jims2: false };
+      // respawn base enemies
+      if (this.baseEnemySpawns) {
+        this.baseEnemySpawns.forEach(([x, y, l, r]) => this.spawnEnemyHelper(x, y, l, r));
+      }
+      // clear leftover projectiles
+      this.enemyProjectiles.clear(true, true);
+      // re-add platform enemies
+      if (this.addSmallPlatformEnemies) {
+        this.addSmallPlatformEnemies();
+      }
+    };
 
     this.spawnShortJim = (x, y) => {
       const enemy = this.enemies.create(x, y, "shortjim").setOrigin(0.5, 1);
@@ -728,6 +757,17 @@ class GameScene extends Phaser.Scene {
       }).setOrigin(0.5);
       this.enemyTextMap.set(enemy, text);
       return enemy;
+    };
+
+    this.addSmallPlatformEnemies = () => {
+      this.platforms.getChildren().forEach((p) => {
+        // Skip large ground slabs
+        if (p.displayWidth && p.displayWidth <= 180) {
+          const x = p.x + Phaser.Math.Between(-10, 10);
+          const y = p.y;
+          this.spawnEnemyHelper(x, y, x - 60, x + 60);
+        }
+      });
     };
 
     // Act I/early enemies
@@ -795,6 +835,8 @@ class GameScene extends Phaser.Scene {
     spawnEnemy(17200, 200, 17100, 17300);
     spawnEnemy(17450, 200, 17350, 17550);
     spawnEnemy(17650, 200, 17550, 17750);
+    // add extra enemies on small platforms
+    this.addSmallPlatformEnemies();
   }
 
   createPlayer() {
@@ -808,12 +850,6 @@ class GameScene extends Phaser.Scene {
     );
     this.player.body.updateFromGameObject();
     this.player.body.syncBounds = true;
-    // TEMP spawn override for testing thin platform///
-    //const testX = 8000;
-    //const testY = 200;
-    //this.player.setPosition(testX, testY);
-    //this.checkpointPos = { x: testX, y: testY };
-    //////
     this.player.body.setCollideWorldBounds(true);
     this.player.body.onWorldBounds = true;
 
@@ -830,16 +866,43 @@ class GameScene extends Phaser.Scene {
     this.checkpointPos = { x: 120, y: PLAYER_Y_BASE + PLAYER_Y_OFFSET };
   }
 
-  createPortal() {
-    this.portal = this.physics.add.staticImage(17800, 320, "portal");
-    this.portal.setDisplaySize(44 * SCALE, 70 * SCALE);
-    this.add.text(17800, 270, "HODL", {
-      fontFamily: "Trebuchet MS",
-      fontSize: "18px",
-      color: "#fa660f",
-      stroke: "#0b0b14",
-      strokeThickness: 3,
-    }).setOrigin(0.5);
+  createPortals() {
+    // pick nearest existing platforms to roughly 1/3 and 2/3 of the world, plus end
+    const targets = [WORLD_END_X / 3, (2 * WORLD_END_X) / 3, WORLD_END_X - 120];
+    const platformBodies = this.platforms.getChildren().map((p) => ({
+      x: p.x,
+      y: p.y,
+      width: p.displayWidth || 160,
+      height: p.displayHeight || 24,
+    }));
+    const portalPositions = targets.map((tx) => {
+      let best = platformBodies[0];
+      let bestDist = Math.abs(platformBodies[0].x - tx);
+      platformBodies.forEach((pb) => {
+        const d = Math.abs(pb.x - tx);
+        if (d < bestDist) {
+          best = pb;
+          bestDist = d;
+        }
+      });
+      return { x: best.x, y: best.y - (best.height ? best.height : 24) - 4 };
+    });
+
+    this.portals = this.physics.add.staticGroup();
+    portalPositions.forEach((pos, idx) => {
+      const x = pos.x;
+      const portalY = pos.y !== undefined ? pos.y : 320;
+      const portal = this.portals.create(x, portalY, "portal").setOrigin(0.5, 1);
+      portal.setDisplaySize(44 * SCALE, 70 * SCALE);
+      portal.setData("levelIndex", idx + 1);
+      this.add.text(x, portalY - 50, "HODL", {
+        fontFamily: "Trebuchet MS",
+        fontSize: "18px",
+        color: "#fa660f",
+        stroke: "#0b0b14",
+        strokeThickness: 3,
+      }).setOrigin(0.5);
+    });
   }
 
   createHUD() {
@@ -958,10 +1021,15 @@ class GameScene extends Phaser.Scene {
       }
     });
 
-    this.physics.add.overlap(this.player, this.portal, () => {
-      if (!this.portalCelebrating) {
-        this.completeLevel();
-      }
+    this.physics.add.overlap(this.player, this.portals, (_player, portal) => {
+      if (this.portalCelebrating) return;
+      if (portal.getData("claimed")) return;
+      portal.setData("claimed", true);
+      this.currentPortalIndex = portal.getData("levelIndex") || 1;
+      // Make this portal a checkpoint
+      this.checkpointActivated = true;
+      this.checkpointPos = { x: portal.x, y: portal.y - 60 };
+      this.completeLevel();
     });
 
   }
@@ -1106,6 +1174,40 @@ class GameScene extends Phaser.Scene {
       this.shortJimWaveSpawned = true;
       this.spawnShortJim(this.player.x - 400, this.player.y - 40);
       this.spawnShortJim(this.player.x - 200, this.player.y - 60);
+    }
+
+    // Dynamic extra spawns after early section
+    if (!this.enemySpawnFlags.after750 && this.player.x > 750) {
+      this.enemySpawnFlags.after750 = true;
+      const add = (x, y) => this.spawnEnemyHelper(x, y, x - 80, x + 80);
+      add(900, 520);
+      add(1250, 500);
+      add(1550, 480);
+      add(1850, 460);
+      add(2150, 440);
+    }
+
+    // Level 2 extra density
+    if (!this.enemySpawnFlags.level2Extras && (this.levelNumber || 1) >= 2) {
+      this.enemySpawnFlags.level2Extras = true;
+      const add = (x, y) => this.spawnEnemyHelper(x, y, x - 90, x + 90);
+      [6200, 6600, 7000, 7400, 7800, 8200, 8600, 9000].forEach((x, idx) => {
+        const y = 420 - idx * 8;
+        add(x, y);
+      });
+    }
+
+    // Level 3: more Short Jims
+    if (!this.enemySpawnFlags.level3Jims1 && (this.levelNumber || 1) >= 3 && this.player.x > 6000) {
+      this.enemySpawnFlags.level3Jims1 = true;
+      this.spawnShortJim(this.player.x - 320, this.player.y - 40);
+      this.spawnShortJim(this.player.x - 160, this.player.y - 60);
+    }
+    if (!this.enemySpawnFlags.level3Jims2 && (this.levelNumber || 1) >= 3 && this.player.x > 13000) {
+      this.enemySpawnFlags.level3Jims2 = true;
+      this.spawnShortJim(this.player.x - 480, this.player.y - 20);
+      this.spawnShortJim(this.player.x - 320, this.player.y - 40);
+      this.spawnShortJim(this.player.x - 160, this.player.y - 60);
     }
   }
 
@@ -1287,6 +1389,7 @@ class GameScene extends Phaser.Scene {
 
     this.invulnerableUntil = time + 1500;
     this.player.body.setVelocity(0, 0);
+    this.resetEnemies();
     this.player.setPosition(this.checkpointPos.x, this.checkpointPos.y);
   }
 
@@ -1478,6 +1581,7 @@ class GameScene extends Phaser.Scene {
     if (this.portalCelebrating) return;
     this.portalCelebrating = true;
     this.player.body.setVelocity(0, 0);
+    const portalIdx = this.currentPortalIndex || this.levelNumber || 1;
 
     // Lightning flashes across the world (top-to-bottom zigzag)
     const flashCount = 14;
@@ -1515,7 +1619,7 @@ class GameScene extends Phaser.Scene {
     }
 
     // Big orange text
-    const label = this.add.text(WIDTH / 2, HEIGHT / 2, `Level ${this.levelNumber || 1} Complete!`, {
+    const label = this.add.text(WIDTH / 2, HEIGHT / 2, `Level ${portalIdx} Complete!`, {
       fontFamily: "Trebuchet MS",
       fontSize: "36px",
       color: "#fa660f",
@@ -1541,9 +1645,41 @@ class GameScene extends Phaser.Scene {
       onComplete: () => {
         label.destroy();
         this.portalCelebrating = false;
-        this.levelNumber = (this.levelNumber || 1) + 1;
+        if (portalIdx >= 3) {
+          this.showSupportOverlay();
+        } else {
+          this.levelNumber = portalIdx + 1;
+        }
       },
     });
+  }
+
+  showSupportOverlay() {
+    this.levelComplete = true;
+    this.physics.pause();
+    const overlay = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x05070d, 0.9)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(2100);
+
+    this.add.text(WIDTH / 2, HEIGHT / 2 - 60, "Support the Game", {
+      fontFamily: "Trebuchet MS",
+      fontSize: "28px",
+      color: "#fa660f",
+      stroke: "#0b0b14",
+      strokeThickness: 5,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2101);
+
+    this.add.text(WIDTH / 2, HEIGHT / 2 - 24, "Scan to support more worlds", {
+      fontFamily: "Trebuchet MS",
+      fontSize: "16px",
+      color: "#e8f6ff",
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2101);
+
+    this.add.image(WIDTH / 2, HEIGHT / 2 + 60, "qr_cta")
+      .setScrollFactor(0)
+      .setDepth(2101)
+      .setDisplaySize(140, 140);
   }
 
   startIntro() {
