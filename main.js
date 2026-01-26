@@ -19,6 +19,7 @@ const JUMP_FORCE = -460;
 const DOUBLE_JUMP_FORCE = -620;
 const COIN_Y_LIFT = -40;
 const WORLD_END_X = 18000;
+const TEST_SPAWN_NEAR_END = false; // set to true when testing near the end
 
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -32,6 +33,8 @@ class GameScene extends Phaser.Scene {
     this.load.image("bg_manhattan", "assets/background-digital-manhattan.png");
     this.load.image("shortjim", "assets/ShortJim.png");
     this.load.image("qr_cta", "assets/QR code.jpg");
+    this.load.audio("bgm", "assets/We call them poor.mp3");
+    this.load.image("speaker_icon", "assets/speaker.svg");
     this.createArrowTexture = () => {
       if (this.textures.exists("shortjim_arrow")) return;
       const g = this.add.graphics();
@@ -88,11 +91,79 @@ class GameScene extends Phaser.Scene {
     this.setupInput();
     this.setupColliders();
     this.portalCelebrating = false;
+    // Start looping soundtrack using HTMLAudio (muted autoplay, then unmute with retries)
+    this.musicOn = true;
+    this.bgmAudio = new Audio("assets/We%20call%20them%20poor.mp3");
+    this.bgmAudio.loop = true;
+    this.bgmAudio.load();
+    this.bgmAudio.volume = 0;
+    this.bgmAudio.muted = true;
+    const unmuteLater = () => {
+      if (!this.musicOn) return;
+      this.bgmAudio.muted = false;
+      this.bgmAudio.volume = 0.4;
+    };
+    const tryPlay = () => {
+      if (!this.musicOn) return;
+      this.bgmAudio.play().then(() => {
+        setTimeout(unmuteLater, 200);
+      }).catch(() => {
+        // ignore; will retry
+      });
+    };
+    // Try immediately
+    tryPlay();
+    // Retry a few times to beat autoplay blocking
+    let retryCount = 0;
+    const retryTimer = setInterval(() => {
+      if (this.bgmAudio && !this.bgmAudio.paused && !this.bgmAudio.muted && this.bgmAudio.volume > 0) {
+        clearInterval(retryTimer);
+        return;
+      }
+      if (retryCount++ > 10) {
+        clearInterval(retryTimer);
+        return;
+      }
+      tryPlay();
+    }, 500);
+    // Fallback: on first interaction
+    const unlock = () => {
+      tryPlay();
+      this.input.off("pointerdown", unlock);
+      this.input.keyboard?.off("keydown", unlock);
+    };
+    this.input.once("pointerdown", unlock);
+    this.input.keyboard?.once("keydown", unlock);
     this.startIntro();
     this.shortJimSpawned = false;
     this.shortJimWaveSpawned = false;
     this.checkDesktopOnly();
     this.checkDesktopOnly();
+
+    // Enable footer music toggle (footer speaker icon)
+    const footerIcons = document.querySelectorAll(".music-toggle");
+    footerIcons.forEach((icon) => {
+      const setState = () => {
+        icon.style.opacity = this.musicOn ? "1" : "0.6";
+        icon.style.filter = this.musicOn
+          ? "invert(57%) sepia(91%) saturate(3489%) hue-rotate(352deg) brightness(100%) contrast(95%) drop-shadow(0 0 2px rgba(250, 102, 15, 0.45))"
+          : "invert(29%) sepia(10%) saturate(400%) hue-rotate(10deg) brightness(70%) contrast(90%)";
+      };
+      setState();
+      icon.onclick = () => {
+        this.musicOn = !this.musicOn;
+        if (this.bgmAudio) {
+          if (this.musicOn) {
+            this.bgmAudio.muted = false;
+            this.bgmAudio.volume = 0.4;
+            if (this.bgmAudio.paused) this.bgmAudio.play().catch(() => {});
+          } else {
+            this.bgmAudio.pause();
+          }
+        }
+        setState();
+      };
+    });
 
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
@@ -327,18 +398,24 @@ class GameScene extends Phaser.Scene {
     const addGround = (x, width) => {
       // Ground spans are not tracked for overlap so elevated platforms are never skipped because of them.
       const platform = this.platforms.create(x, groundY, "platform");
-      platform.setDisplaySize(width, 36);
+      const h = 36;
+      platform.setDisplaySize(width, h);
       platform.refreshBody();
+      if (platform.body) {
+        platform.body.setSize(width, h);
+        platform.body.updateFromGameObject();
+      }
       return platform;
     };
 
     const addPlatform = (x, y, width, texture = "platform") => {
       if (overlapsSpan(x, width)) return null;
       const platform = this.platforms.create(x, y, texture);
-      platform.setDisplaySize(width, texture === "cable" ? 10 : 24);
+      const h = texture === "cable" ? 10 : 24;
+      platform.setDisplaySize(width, h);
       platform.refreshBody();
       if (platform.body) {
-        platform.body.setSize(width, texture === "cable" ? 10 : 24);
+        platform.body.setSize(width, h);
         platform.body.updateFromGameObject();
       }
       pushSpan(x, width);
@@ -348,8 +425,13 @@ class GameScene extends Phaser.Scene {
     const addFragile = (x, y, width = 120) => {
       if (overlapsSpan(x, width)) return null;
       const p = this.fragilePlatforms.create(x, y, "platform_fragile");
-      p.setDisplaySize(width, 12);
+      const h = 12;
+      p.setDisplaySize(width, h);
       p.refreshBody();
+      if (p.body) {
+        p.body.setSize(width, h);
+        p.body.updateFromGameObject();
+      }
       p.setData("breaking", false);
       pushSpan(x, width);
       return p;
@@ -733,7 +815,7 @@ class GameScene extends Phaser.Scene {
       }
     };
 
-    this.spawnShortJim = (x, y) => {
+    this.spawnShortJim = (x, y, opts = {}) => {
       const enemy = this.enemies.create(x, y, "shortjim").setOrigin(0.5, 1);
       // Use native sprite size (no rescale) and custom body
       enemy.body.setSize(enemy.width * 0.6, enemy.height * 0.9);
@@ -744,7 +826,7 @@ class GameScene extends Phaser.Scene {
       enemy.body.allowGravity = false; // don't fall into gaps
       enemy.setData("leftBound", 0);
       enemy.setData("rightBound", this.worldWidth);
-      enemy.setData("speed", 100);
+      enemy.setData("speed", opts.speed || 100);
       enemy.setData("chaseRange", 1200);
       enemy.setData("dir", 1);
       enemy.setData("type", "shortjim");
@@ -770,11 +852,20 @@ class GameScene extends Phaser.Scene {
       });
     };
 
+    // Special ShortJims in Act I
+    this.spawnShortJim(2500, 360, { speed: 44 }); // ~10% faster than base monsters (40*1.1)
+    this.spawnShortJim(2700, 360);
+    this.spawnShortJim(4000, 360);
+    this.spawnShortJim(4500, 360);
+
     // Act I/early enemies
     spawnEnemy(180, 520, 120, 240);
     spawnEnemy(380, 520, 320, 440);
     spawnEnemy(700, 520, 620, 780);
     spawnEnemy(1050, 520, 970, 1130);
+    spawnEnemy(1100, 520, 1220, 1380);
+    spawnEnemy(1101, 520, 1220, 1380);
+    spawnEnemy(1301, 520, 1220, 1380);
     spawnEnemy(1300, 520, 1220, 1380);
     spawnEnemy(1700, 520, 1620, 1780);
     spawnEnemy(1500, 420, 1400, 1620);
@@ -851,6 +942,14 @@ class GameScene extends Phaser.Scene {
     this.player.body.updateFromGameObject();
     this.player.body.syncBounds = true;
     this.player.body.setCollideWorldBounds(true);
+
+    // TEMP for testing: spawn near the end for testing. Toggle TEST_SPAWN_NEAR_END.
+    // if (TEST_SPAWN_NEAR_END) {
+    //   const testX = 17500;
+    //   const testY = 260; // adjust if needed
+    //   this.player.setPosition(testX, testY);
+    //   this.checkpointPos = { x: testX, y: testY };
+    // }
     this.player.body.onWorldBounds = true;
 
     this.playerShadow = this.add.image(this.player.x, this.player.y, "player_shadow")
@@ -918,6 +1017,9 @@ class GameScene extends Phaser.Scene {
       color: "#fa660f",
       align: "right",
     }).setOrigin(1, 0).setScrollFactor(0);
+
+    // Music toggle button
+    // Music toggle handled in credits footer (not in HUD)
 
     this.btcChartFill = this.add.graphics().setScrollFactor(0).setDepth(1001);
     this.btcChartLine = this.add.graphics().setScrollFactor(0).setDepth(1002);
@@ -1025,11 +1127,11 @@ class GameScene extends Phaser.Scene {
       if (this.portalCelebrating) return;
       if (portal.getData("claimed")) return;
       portal.setData("claimed", true);
-      this.currentPortalIndex = portal.getData("levelIndex") || 1;
+      const idx = portal.getData("levelIndex") || 1;
       // Make this portal a checkpoint
       this.checkpointActivated = true;
       this.checkpointPos = { x: portal.x, y: portal.y - 60 };
-      this.completeLevel();
+      this.completeLevel(idx);
     });
 
   }
@@ -1577,11 +1679,11 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  completeLevel() {
+  completeLevel(portalIdxParam) {
     if (this.portalCelebrating) return;
     this.portalCelebrating = true;
     this.player.body.setVelocity(0, 0);
-    const portalIdx = this.currentPortalIndex || this.levelNumber || 1;
+    const portalIdx = portalIdxParam || this.currentPortalIndex || this.levelNumber || 1;
 
     // Lightning flashes across the world (top-to-bottom zigzag)
     const flashCount = 14;
@@ -1646,6 +1748,9 @@ class GameScene extends Phaser.Scene {
         label.destroy();
         this.portalCelebrating = false;
         if (portalIdx >= 3) {
+          if (this.bgmAudio) {
+            this.bgmAudio.pause();
+          }
           this.showSupportOverlay();
         } else {
           this.levelNumber = portalIdx + 1;
@@ -1661,6 +1766,9 @@ class GameScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setScrollFactor(0)
       .setDepth(2100);
+    if (this.bgm && this.bgm.stop) {
+      this.bgm.stop();
+    }
 
     this.add.text(WIDTH / 2, HEIGHT / 2 - 60, "Support the Game", {
       fontFamily: "Trebuchet MS",
@@ -1676,10 +1784,44 @@ class GameScene extends Phaser.Scene {
       color: "#e8f6ff",
     }).setOrigin(0.5).setScrollFactor(0).setDepth(2101);
 
-    this.add.image(WIDTH / 2, HEIGHT / 2 + 60, "qr_cta")
+    // Rounded backdrop for QR
+    const qrY = HEIGHT / 2 + 70;
+    const qrSize = 120;
+    const qrPad = 10;
+    const g = this.add.graphics({ x: WIDTH / 2 - qrSize / 2 - qrPad, y: qrY - qrSize / 2 - qrPad }).setDepth(2101);
+    g.fillStyle(0x0f1424, 1);
+    g.lineStyle(2, 0xfa660f, 0.35);
+    g.fillRoundedRect(0, 0, qrSize + qrPad * 2, qrSize + qrPad * 2, 14);
+    g.strokeRoundedRect(0, 0, qrSize + qrPad * 2, qrSize + qrPad * 2, 14);
+
+    this.add.image(WIDTH / 2, qrY, "qr_cta")
       .setScrollFactor(0)
-      .setDepth(2101)
-      .setDisplaySize(140, 140);
+      .setDepth(2102)
+      .setDisplaySize(qrSize, qrSize);
+
+    this.add.text(WIDTH / 2, qrY + qrSize / 2 + 18, "Bitcoin address", {
+      fontFamily: "Trebuchet MS",
+      fontSize: "14px",
+      color: "#e8f6ff",
+    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(2102);
+
+    // Replace tip text with replay prompt
+    if (this.tipText && this.tipText.destroy) {
+      this.tipText.destroy();
+    }
+    this.tipText = this.add.text(WIDTH / 2, 18, "Press Enter to replay", {
+      fontFamily: "Trebuchet MS",
+      fontSize: "16px",
+      color: "#fa660f",
+      backgroundColor: "rgba(8,12,20,0.65)",
+      padding: { x: 10, y: 4 },
+    }).setOrigin(0.5, 0)
+      .setScrollFactor(0)
+      .setDepth(2103);
+
+    const restart = () => window.location.reload();
+    this.input.keyboard.once("keydown-ENTER", restart);
+    overlay.setInteractive().once("pointerdown", restart);
   }
 
   startIntro() {

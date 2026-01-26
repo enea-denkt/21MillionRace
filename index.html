@@ -3,13 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Digital Manhattan 1-1</title>
+    <title>21 Million Race</title>
     <link rel="icon" href="assets/Saylor.png" type="image/png" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="layout">
+      <div class="hud-tip">Press E for laser eyes • Double-tap ↑ to jump higher</div>
       <div id="game"></div>
+      <div class="credits">
+        <div class="credit-line music-credit">
+          Music: “We Call Them Poor” by <a href="https://x.com/lilbubble" target="_blank" rel="noopener">@lilbubble</a>
+          <img class="credit-icon music-toggle" src="assets/speaker.svg" alt="speaker icon" />
+        </div>
+        <div class="credit-line game-credit">Game by <a href="https://x.com/EneaDenkt" target="_blank" rel="noopener">@EneaDenkt</a></div>
+      </div>
       <div id="donate">
         <div class="donate-card">
           <div class="donate-text">
@@ -25,5 +33,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <script src="main.js"></script>
+    <!-- 100% privacy-first analytics -->
+    <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
   </body>
 </html>
