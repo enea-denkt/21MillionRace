@@ -17,7 +17,7 @@ const BG_SCALE = 0.7;
 const JUMP_FORCE = -460;
 const DOUBLE_JUMP_FORCE = -620;
 const COIN_Y_LIFT = -40;
-const WORLD_END_X = 13600;
+const WORLD_END_X = 18000;
 
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -51,6 +51,8 @@ class GameScene extends Phaser.Scene {
       allowGravity: false,
       immovable: true,
     });
+    this.fragilePlatforms = this.physics.add.staticGroup();
+    this.bouncePlatforms = this.physics.add.staticGroup();
 
     this.createLevel();
     this.createCollectibles();
@@ -102,6 +104,20 @@ class GameScene extends Phaser.Scene {
       g.fillRoundedRect(0, 0, 200, 24, 6);
       g.lineStyle(2, 0x1a0c03, 0.6);
       g.strokeRoundedRect(2, 2, 196, 20, 6);
+    });
+    makeTexture("platform_fragile", 200, 12, (g) => {
+      g.fillStyle(0xffd27a, 1);
+      g.fillRoundedRect(0, 0, 200, 12, 4);
+      g.lineStyle(1, 0xffa200, 0.8);
+      g.strokeRoundedRect(1, 1, 198, 10, 4);
+    });
+    makeTexture("platform_bounce", 120, 18, (g) => {
+      g.fillStyle(0x0d2638, 1);
+      g.fillRoundedRect(0, 0, 120, 18, 6);
+      g.fillStyle(0x6bf2ff, 1);
+      g.fillRoundedRect(6, 2, 108, 8, 4);
+      g.lineStyle(2, 0x2cf7d0, 0.9);
+      g.strokeRoundedRect(0, 0, 120, 18, 6);
     });
 
     makeTexture("cable", 200, 10, (g) => {
@@ -258,18 +274,44 @@ class GameScene extends Phaser.Scene {
 
   createLevel() {
     const groundY = 520;
+    const spans = [];
+    const overlapsSpan = (x, width) => spans.some(([l, r]) => x - width / 2 < r && x + width / 2 > l);
+    const pushSpan = (x, width) => spans.push([x - width / 2, x + width / 2]);
 
     const addGround = (x, width) => {
+      // Ground spans are not tracked for overlap so elevated platforms are never skipped because of them.
       const platform = this.platforms.create(x, groundY, "platform");
       platform.setDisplaySize(width, 36);
       platform.refreshBody();
+      return platform;
     };
 
     const addPlatform = (x, y, width, texture = "platform") => {
+      if (overlapsSpan(x, width)) return null;
       const platform = this.platforms.create(x, y, texture);
       platform.setDisplaySize(width, texture === "cable" ? 10 : 24);
       platform.refreshBody();
+      pushSpan(x, width);
       return platform;
+    };
+
+    const addFragile = (x, y, width = 120) => {
+      if (overlapsSpan(x, width)) return null;
+      const p = this.fragilePlatforms.create(x, y, "platform_fragile");
+      p.setDisplaySize(width, 12);
+      p.refreshBody();
+      p.setData("breaking", false);
+      pushSpan(x, width);
+      return p;
+    };
+
+    const addBounce = (x, y, width = 120) => {
+      if (overlapsSpan(x, width)) return null;
+      const p = this.bouncePlatforms.create(x, y, "platform_bounce");
+      p.setDisplaySize(width, 18);
+      p.refreshBody();
+      pushSpan(x, width);
+      return p;
     };
 
     const grounds = [
@@ -277,6 +319,7 @@ class GameScene extends Phaser.Scene {
       [4550, 400], [5200, 380],
       [6000, 420], [6800, 420], [7600, 420], [8200, 420], [9000, 420],
       [9800, 420], [10400, 420], [11200, 420], [12000, 420], [12600, 400], [13200, 380],
+      [14000, 360], [14800, 360], [15600, 340], [16400, 340], [17200, 320], [17800, 320],
     ];
     grounds.forEach(([x, w]) => addGround(x, w));
 
@@ -290,17 +333,31 @@ class GameScene extends Phaser.Scene {
       [5600, 320, 150], [5800, 300, 140],
       // Act II
       [6200, 440, 140], [6400, 420, 140],
-      [7000, 410, 150], [7200, 380, 150],
+      [7200, 380, 150],
       [7800, 400, 150],
       [8400, 380, 150],
       [9100, 360, 150],
       // Act III
-      [10000, 400, 150], [10180, 360, 150],
+      [9550, 400, 150], [10180, 360, 150],
       [10600, 380, 150], [10850, 360, 150],
       [11400, 380, 150],
       [12150, 360, 150],
       [12800, 340, 150],
       [13350, 320, 140],
+      [14050, 320, 140],
+      [14500, 300, 140],
+      [15050, 300, 140],
+      [15650, 280, 140],
+      [16200, 280, 140],
+      [16800, 260, 140],
+      [17400, 260, 140],
+      // Gap reducers
+      [6900, 390, 120],
+      [8600, 360, 120],
+      [11200, 360, 120],
+      [13600, 340, 120],
+      [16000, 300, 120],
+      [17450, 280, 120],
     ];
     platforms.forEach(([x, y, w, t]) => addPlatform(x, y, w, t));
 
@@ -317,12 +374,37 @@ class GameScene extends Phaser.Scene {
       { x: 11800, y: 340, w: 140, h: 20, data: { startY: 320, endY: 420, speed: 0.0013, axis: "y" } },
       { x: 12500, y: 340, w: 140, h: 20, data: { startX: 12360, endX: 12640, speed: 0.0016, axis: "x" } },
       { x: 13150, y: 320, w: 130, h: 20, data: { startX: 13050, endX: 13250, speed: 0.0018, axis: "x" } },
+      { x: 14250, y: 300, w: 130, h: 20, data: { startX: 14150, endX: 14350, speed: 0.0018, axis: "x" } },
+      { x: 14950, y: 300, w: 130, h: 20, data: { startY: 280, endY: 360, speed: 0.0014, axis: "y" } },
+      { x: 15750, y: 280, w: 130, h: 20, data: { startX: 15620, endX: 15880, speed: 0.0019, axis: "x" } },
+      { x: 16550, y: 270, w: 130, h: 20, data: { startY: 250, endY: 330, speed: 0.0016, axis: "y" } },
+      { x: 17350, y: 260, w: 130, h: 20, data: { startX: 17220, endX: 17480, speed: 0.0020, axis: "x" } },
     ];
     movers.forEach((m) => {
+      if (overlapsSpan(m.x, m.w)) return;
       const p = this.movingPlatforms.create(m.x, m.y, "platform");
       p.setDisplaySize(m.w, m.h);
       p.setData(m.data);
+      pushSpan(m.x, m.w);
     });
+
+    // Insert fragile platforms only to bridge big gaps (>200) between static platforms
+    const ordered = platforms.slice().sort((a, b) => a[0] - b[0]);
+    for (let i = 0; i < ordered.length - 1; i += 1) {
+      const [x1, y1, w1] = ordered[i];
+      const [x2, y2, w2] = ordered[i + 1];
+      const gap = (x2 - w2 / 2) - (x1 + w1 / 2);
+      if (gap > 200) {
+        const midX = (x1 + x2) / 2;
+        const midY = Math.min(y1, y2) - 30;
+        addFragile(midX, midY, 140);
+      }
+    }
+
+    addBounce(8400, 360, 120);
+    addBounce(11800, 320, 120);
+    addBounce(15000, 280, 120);
+    addBounce(17600, 240, 120);
   }
 
   createCollectibles() {
@@ -333,13 +415,38 @@ class GameScene extends Phaser.Scene {
 
     this.coinTextMap = new Map();
 
-    const randomCoinValue = (isBig) => {
-      const pool = isBig ? COIN_VALUES.filter((v) => v >= 500) : COIN_VALUES.filter((v) => v < 500);
-      return Phaser.Utils.Array.GetRandom(pool.length ? pool : COIN_VALUES);
+    const randomCoinValue = (forcedValue, maxCap) => {
+      if (forcedValue !== undefined) {
+        return forcedValue;
+      }
+      const capFilter = (arr) => (maxCap ? arr.filter((v) => v < maxCap) : arr);
+      const low = capFilter(COIN_VALUES.filter((v) => v > 20 && v < 500));
+      const mid = capFilter(COIN_VALUES.filter((v) => v >= 500 && v < 3000));
+      const midHigh = capFilter(COIN_VALUES.filter((v) => v >= 3000 && v <= 5000));
+      const high = capFilter(COIN_VALUES.filter((v) => v > 5000));
+      const r = Math.random();
+      let pool = capFilter(COIN_VALUES);
+      if (r < 0.75 && low.length) {
+        pool = low;
+      } else if (r < 0.85 && mid.length) {
+        pool = mid;
+      } else if (r < 0.95 && midHigh.length) {
+        pool = midHigh;
+      } else if (high.length) {
+        pool = high;
+      }
+      if (!pool.length) {
+        pool = COIN_VALUES;
+      }
+      return Phaser.Utils.Array.GetRandom(pool);
     };
 
-    const makeCoin = (x, y, isBig) => {
-      const value = randomCoinValue(isBig);
+    let coinCount = 0;
+    const makeCoin = (x, y, forcedValue) => {
+      const cap = coinCount < 10 ? 1000 : undefined;
+      const value = randomCoinValue(forcedValue, cap);
+      coinCount += 1;
+      const isBig = value >= 1000;
       const key = isBig ? "coin_big" : "coin_small";
       const coin = this.coins.create(x, y + COIN_Y_LIFT, key);
       coin.setDisplaySize((isBig ? 36 : 24) * SCALE, (isBig ? 36 : 24) * SCALE);
@@ -354,7 +461,7 @@ class GameScene extends Phaser.Scene {
         align: "center",
       }).setOrigin(0.5);
 
-      const valueText = this.add.text(x, y + 18 * SCALE, String(value), {
+      const valueText = this.add.text(x, y + (isBig ? 26 : 20) * SCALE, String(value), {
         fontFamily: "Trebuchet MS",
         fontSize: `${10 * SCALE}px`,
         color: "#fffbdd",
@@ -365,50 +472,112 @@ class GameScene extends Phaser.Scene {
       return coin;
     };
 
-    // Onboarding rewards
-    makeCoin(200, 480, false);
-    makeCoin(500, 430, false);
-    makeCoin(720, 420, false);
+    // Onboarding rewards (first two fixed)
+    makeCoin(200, 480, 50);
+    makeCoin(500, 430, 150);
+    makeCoin(720, 420);
 
     // First enemy section
-    makeCoin(980, 470, false);
-    makeCoin(1220, 420, false);
+    makeCoin(980, 470);
+    makeCoin(1220, 420);
 
     // Rhythm steps
-    makeCoin(1500, 400, false);
-    makeCoin(1700, 360, false);
-    makeCoin(1880, 320, false);
-    makeCoin(2060, 300, true);
+    makeCoin(1500, 400);
+    makeCoin(1700, 360);
+    makeCoin(1880, 320);
+    makeCoin(2060, 300);
 
     // Moving platforms mid
-    makeCoin(2500, 360, false);
-    makeCoin(2700, 340, true);
-    makeCoin(2900, 330, false);
+    makeCoin(2500, 360);
+    makeCoin(2700, 340);
+    makeCoin(2900, 330);
 
     // Moving + gaps
-    makeCoin(3200, 390, false);
-    makeCoin(3400, 330, false);
-    makeCoin(3600, 300, true);
+    makeCoin(3200, 390);
+    makeCoin(3400, 330);
+    makeCoin(3600, 300);
 
     // Pre-checkpoint
-    makeCoin(3900, 390, false);
-    makeCoin(4100, 350, false);
-    makeCoin(4320, 350, false);
+    makeCoin(3900, 390);
+    makeCoin(4100, 350);
+    makeCoin(4320, 350);
 
     // Post-checkpoint pressure
-    makeCoin(4550, 370, false);
-    makeCoin(4760, 310, true);
-    makeCoin(4950, 300, false);
+    makeCoin(4550, 370);
+    makeCoin(4760, 310);
+    makeCoin(4950, 300);
 
     // Final push
-    makeCoin(5200, 350, false);
-    makeCoin(5400, 320, true);
-    makeCoin(5600, 300, false);
-    makeCoin(5800, 280, true);
+    makeCoin(5200, 350);
+    makeCoin(5400, 320);
+    makeCoin(5600, 300);
+    makeCoin(5800, 280);
+    // Act II / III extension
+    makeCoin(6000, 400);
+    makeCoin(6200, 420);
+    makeCoin(6400, 400);
+    makeCoin(6600, 380);
+    makeCoin(6800, 370);
+    makeCoin(7000, 360);
+    makeCoin(7200, 340);
+    makeCoin(7400, 330);
+    makeCoin(7600, 320);
+    makeCoin(7800, 310);
+    makeCoin(8000, 300);
+    makeCoin(8200, 290);
+    makeCoin(8400, 280);
+    makeCoin(8600, 280);
+    makeCoin(8800, 280);
+    makeCoin(9000, 280);
+    makeCoin(9200, 270);
+    makeCoin(9400, 270);
+    makeCoin(9600, 260);
+    makeCoin(9800, 260);
+    makeCoin(10000, 260);
+    makeCoin(10200, 250);
+    makeCoin(10400, 250);
+    makeCoin(10600, 240);
+    makeCoin(10800, 240);
+    makeCoin(11000, 240);
+    makeCoin(11200, 230);
+    makeCoin(11400, 230);
+    makeCoin(11600, 220);
+    makeCoin(11800, 220);
+    makeCoin(12000, 220);
+    makeCoin(12200, 210);
+    makeCoin(12400, 210);
+    makeCoin(12600, 200);
+    makeCoin(12800, 200);
+    makeCoin(13000, 190);
+    makeCoin(13200, 190);
+    makeCoin(13400, 180);
+    makeCoin(13600, 180);
+    makeCoin(13800, 170);
+    makeCoin(14000, 170);
+    makeCoin(14200, 160);
+    makeCoin(14400, 160);
+    makeCoin(14600, 150);
+    makeCoin(14800, 150);
+    makeCoin(15000, 140);
+    makeCoin(15200, 140);
+    makeCoin(15400, 130);
+    makeCoin(15600, 130);
+    makeCoin(15800, 120);
+    makeCoin(16000, 120);
+    makeCoin(16200, 120);
+    makeCoin(16400, 110);
+    makeCoin(16600, 110);
+    makeCoin(16800, 100);
+    makeCoin(17000, 100);
+    makeCoin(17200, 100);
+    makeCoin(17400, 90);
+    makeCoin(17600, 90);
+    makeCoin(17800, 90);
   }
 
   createEnemies() {
     this.enemies = this.physics.add.group();
+    this.physics.add.collider(this.enemies, this.platforms);
     this.enemyTextMap = new Map();
 
     const spawnEnemy = (x, y, leftBound, rightBound) => {
@@ -440,27 +609,86 @@ class GameScene extends Phaser.Scene {
       return enemy;
     };
 
-    spawnEnemy(760, 520, 640, 860);
+    // Act I/early enemies
+    spawnEnemy(180, 520, 120, 240);
+    spawnEnemy(380, 520, 320, 440);
+    spawnEnemy(700, 520, 620, 780);
+    spawnEnemy(1050, 520, 970, 1130);
+    spawnEnemy(1300, 520, 1220, 1380);
     spawnEnemy(1500, 420, 1400, 1620);
     spawnEnemy(1860, 420, 1760, 1940);
     spawnEnemy(2300, 420, 2200, 2420);
+    spawnEnemy(2600, 420, 2500, 2720);
     spawnEnemy(3200, 420, 3120, 3320);
     spawnEnemy(3400, 420, 3280, 3520);
+    spawnEnemy(3800, 400, 3700, 3920);
+    spawnEnemy(4300, 400, 4200, 4420);
     spawnEnemy(4550, 400, 4460, 4660);
     spawnEnemy(4760, 400, 4680, 4840);
     spawnEnemy(5200, 380, 5120, 5320);
+    spawnEnemy(5600, 360, 5500, 5720);
+    // Act II/III denser enemies
+    spawnEnemy(6000, 420, 5900, 6100);
+    spawnEnemy(6200, 420, 6120, 6320);
+    spawnEnemy(6400, 400, 6300, 6500);
+    spawnEnemy(6600, 400, 6500, 6700);
+    spawnEnemy(6800, 380, 6680, 6920);
+    spawnEnemy(7000, 380, 6900, 7100);
+    spawnEnemy(7200, 360, 7100, 7300);
+    spawnEnemy(7600, 340, 7480, 7720);
+    spawnEnemy(7800, 340, 7700, 7900);
+    spawnEnemy(8000, 330, 7900, 8100);
+    spawnEnemy(8200, 360, 8080, 8320);
+    spawnEnemy(8600, 340, 8480, 8720);
+    spawnEnemy(8800, 340, 8700, 8900);
+    spawnEnemy(9000, 320, 8880, 9120);
+    spawnEnemy(9400, 320, 9300, 9500);
+    spawnEnemy(9800, 320, 9680, 9920);
+    spawnEnemy(10100, 320, 10000, 10200);
+    spawnEnemy(10500, 300, 10400, 10600);
+    spawnEnemy(10400, 300, 10300, 10500);
+    spawnEnemy(11000, 300, 10900, 11100);
+    spawnEnemy(11200, 300, 11100, 11300);
+    spawnEnemy(11600, 300, 11500, 11700);
+    spawnEnemy(11800, 300, 11700, 11900);
+    spawnEnemy(12200, 280, 12100, 12300);
+    spawnEnemy(12400, 280, 12300, 12500);
+    spawnEnemy(12800, 280, 12700, 12900);
+    spawnEnemy(13000, 280, 12900, 13100);
+    spawnEnemy(13400, 260, 13300, 13500);
+    spawnEnemy(13600, 260, 13500, 13700);
+    spawnEnemy(14000, 260, 13900, 14100);
+    spawnEnemy(14200, 260, 14100, 14300);
+    spawnEnemy(14600, 240, 14500, 14700);
+    spawnEnemy(14800, 240, 14700, 14900);
+    spawnEnemy(15200, 240, 15100, 15300);
+    spawnEnemy(15400, 240, 15300, 15500);
+    spawnEnemy(15800, 220, 15700, 15900);
+    spawnEnemy(16000, 220, 15900, 16100);
+    spawnEnemy(16400, 220, 16300, 16500);
+    spawnEnemy(16600, 220, 16500, 16700);
+    spawnEnemy(17000, 200, 16900, 17100);
+    spawnEnemy(17200, 200, 17100, 17300);
+    spawnEnemy(17450, 200, 17350, 17550);
+    spawnEnemy(17650, 200, 17550, 17750);
   }
 
   createPlayer() {
     const textureKey = this.textures.exists("saylor_clean") ? "saylor_clean" : "saylor";
     this.player = this.physics.add.sprite(120, PLAYER_Y_BASE + PLAYER_Y_OFFSET, textureKey).setOrigin(0.5, 0.5);
-    this.player.setDisplaySize(PLAYER_BASE_W * SCALE, PLAYER_BASE_H * SCALE);
+    //this.player.setDisplaySize(PLAYER_BASE_W * SCALE, PLAYER_BASE_H * SCALE);
     this.player.body.setSize(this.player.displayWidth * 0.6, this.player.displayHeight * 0.8);
     this.player.body.setOffset(
       (this.player.displayWidth - this.player.body.width) / 2,
       this.player.displayHeight - this.player.body.height
     );
     this.player.body.updateFromGameObject();
+    this.player.body.syncBounds = true;
+    // TEMP spawn override for testing thin platform
+    const testX = 9000;
+    const testY = 360;
+    this.player.setPosition(testX, testY);
+    this.checkpointPos = { x: testX, y: testY };
     this.player.body.setCollideWorldBounds(true);
     this.player.body.onWorldBounds = true;
 
@@ -478,9 +706,9 @@ class GameScene extends Phaser.Scene {
   }
 
   createPortal() {
-    this.portal = this.physics.add.staticImage(5820, 420, "portal");
+    this.portal = this.physics.add.staticImage(17800, 320, "portal");
     this.portal.setDisplaySize(44 * SCALE, 70 * SCALE);
-    this.add.text(5820, 370, "HODL", {
+    this.add.text(17800, 270, "HODL", {
       fontFamily: "Trebuchet MS",
       fontSize: "18px",
       color: "#fa660f",
@@ -531,6 +759,12 @@ class GameScene extends Phaser.Scene {
   setupColliders() {
     this.physics.add.collider(this.player, this.platforms);
     this.physics.add.collider(this.player, this.movingPlatforms);
+    this.physics.add.collider(this.player, this.fragilePlatforms, (player, plat) => {
+      this.breakFragilePlatform(plat);
+    });
+    this.physics.add.collider(this.player, this.bouncePlatforms, (player) => {
+      this.bouncePlayer();
+    });
     this.physics.add.collider(this.enemies, this.platforms);
     this.physics.add.collider(this.enemies, this.movingPlatforms);
     this.physics.world.on("worldbounds", (body, up, down) => {
@@ -817,7 +1051,9 @@ class GameScene extends Phaser.Scene {
       }
       texts.symbolText.setPosition(coin.x, coin.y);
       if (texts.valueText) {
-        texts.valueText.setPosition(coin.x, coin.y + 18 * SCALE);
+        const isBig = coin.getData("isBig");
+        const labelOffset = (isBig ? 26 : 20) * SCALE;
+        texts.valueText.setPosition(coin.x, coin.y + labelOffset);
       }
     });
   }
@@ -825,6 +1061,28 @@ class GameScene extends Phaser.Scene {
   checkFall(time) {
     if (this.player.y > this.worldHeight + 80) {
       this.playerHit(time, true);
+    }
+  }
+
+  breakFragilePlatform(plat) {
+    if (plat.getData("breaking")) return;
+    plat.setData("breaking", true);
+    this.tweens.add({
+      targets: plat,
+      alpha: 0.2,
+      duration: 120,
+      yoyo: true,
+      repeat: 0,
+      onComplete: () => plat.destroy(),
+    });
+  }
+
+  bouncePlayer() {
+    // Bounce only when coming from above
+    if (this.player.body.velocity.y >= 0) {
+      const horizBoost = this.facing ? this.facing * 320 : 0;
+      this.player.body.setVelocity(horizBoost, DOUBLE_JUMP_FORCE * 3);
+      this.playTone(720, 0.06);
     }
   }
 
