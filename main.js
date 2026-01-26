@@ -89,6 +89,8 @@ class GameScene extends Phaser.Scene {
     this.startIntro();
     this.shortJimSpawned = false;
     this.shortJimWaveSpawned = false;
+    this.checkDesktopOnly();
+    this.checkDesktopOnly();
 
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
@@ -799,18 +801,19 @@ class GameScene extends Phaser.Scene {
     const textureKey = this.textures.exists("saylor_clean") ? "saylor_clean" : "saylor";
     this.player = this.physics.add.sprite(120, PLAYER_Y_BASE + PLAYER_Y_OFFSET, textureKey).setOrigin(0.5, 0.5);
     //this.player.setDisplaySize(PLAYER_BASE_W * SCALE, PLAYER_BASE_H * SCALE);
-    this.player.body.setSize(this.player.displayWidth * 0.6, this.player.displayHeight * 0.8);
+    this.player.body.setSize(this.player.displayWidth * 0.6, this.player.displayHeight);
     this.player.body.setOffset(
       (this.player.displayWidth - this.player.body.width) / 2,
       this.player.displayHeight - this.player.body.height
     );
     this.player.body.updateFromGameObject();
     this.player.body.syncBounds = true;
-    // TEMP spawn override for testing thin platform
+    // TEMP spawn override for testing thin platform///
     const testX = 8000;
-    const testY = 360;
+    const testY = 200;
     this.player.setPosition(testX, testY);
     this.checkpointPos = { x: testX, y: testY };
+    //////
     this.player.body.setCollideWorldBounds(true);
     this.player.body.onWorldBounds = true;
 
@@ -1621,6 +1624,30 @@ class GameScene extends Phaser.Scene {
     this.input.keyboard.once("keydown-R", () => {
       this.scene.restart();
     });
+  }
+
+  checkDesktopOnly() {
+    const isMobile =
+      this.sys.game.device.os.android ||
+      this.sys.game.device.os.iOS ||
+      this.sys.game.device.os.iPad;
+    const tinyScreen = window.innerWidth < 768 || window.innerHeight < 420;
+    if (isMobile || tinyScreen) {
+      this.physics.pause();
+      this.levelComplete = true;
+      const overlay = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x000000, 0.8)
+        .setOrigin(0, 0)
+        .setScrollFactor(0)
+        .setDepth(2500);
+      this.add.text(WIDTH / 2, HEIGHT / 2, "This game is available only on desktop.", {
+        fontFamily: "Trebuchet MS",
+        fontSize: "18px",
+        color: "#fa660f",
+        align: "center",
+      }).setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(2501);
+    }
   }
 
   playTone(freq, duration) {
