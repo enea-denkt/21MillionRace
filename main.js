@@ -77,16 +77,16 @@ class GameScene extends Phaser.Scene {
 
       container.style.position = "relative";
       container.style.width = `${vw}px`;
-      container.style.height = `${vh}px`;
+      container.style.height = `${targetH * cssScale}px`;
       container.style.overflow = "hidden";
 
       canvas.style.position = "absolute";
       canvas.style.width = `${targetW}px`;
       canvas.style.height = `${targetH}px`;
-      canvas.style.left = "50%";
-      canvas.style.top = "50%";
-      canvas.style.transformOrigin = "center center";
-      canvas.style.transform = `translate(-50%, -50%) scale(${cssScale})`;
+      canvas.style.left = "0";
+      canvas.style.top = "0";
+      canvas.style.transformOrigin = "top left";
+      canvas.style.transform = `scale(${cssScale})`;
       return;
     }
 
@@ -98,7 +98,7 @@ class GameScene extends Phaser.Scene {
 
     container.style.position = "relative";
     container.style.width = `${vw}px`;
-    container.style.height = `${vh}px`;
+    container.style.height = `${targetH * cssScale}px`;
     container.style.overflow = "hidden";
 
     canvas.style.position = "absolute";
