@@ -48,8 +48,8 @@ class GameScene extends Phaser.Scene {
     const canvas = this.game.canvas;
     if (!container || !canvas) return;
 
-    // Desktop or any landscape view: behave like before.
-    if (!portrait || !this.isMobile) {
+    // Desktop: unchanged.
+    if (!this.isMobile) {
       const scale = Math.min(vw / targetW, vh / targetH, 1);
       this.cameras.main.setZoom(scale);
       this.scale.resize(targetW, targetH);
@@ -68,31 +68,50 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Mobile portrait behaves like desktop (no forced rotation) unless user requests fullscreen.
-    const baseScale = Math.min(vw / targetW, vh / targetH);
-    this.cameras.main.setZoom(baseScale);
+    // Mobile portrait: scale to nearly full width, keep desktop proportions, no rotation.
+    if (portrait) {
+      const marginFactor = 0.98;
+      const scale = Math.min((vw * marginFactor) / targetW, vh / targetH);
+      this.cameras.main.setZoom(scale);
+      this.scale.resize(targetW, targetH);
+      this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
+
+      container.style.position = "relative";
+      container.style.width = `${vw}px`;
+      container.style.height = `${vh}px`;
+      container.style.overflow = "hidden";
+
+      canvas.style.position = "absolute";
+      canvas.style.width = `${targetW}px`;
+      canvas.style.height = `${targetH}px`;
+      canvas.style.left = "50%";
+      canvas.style.top = "50%";
+      canvas.style.transformOrigin = "center center";
+      canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      return;
+    }
+
+    // Mobile landscape: same zoom as desktop, request fullscreen, no rotation.
+    const scale = Math.min(vw / targetW, vh / targetH);
+    this.cameras.main.setZoom(scale);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
-    const rotateFullscreen = document.fullscreenElement || this.forceMobileFullscreen;
-
     container.style.position = "relative";
-    container.style.width = `${targetW}px`;
-    container.style.height = `${targetH}px`;
+    container.style.width = `${vw}px`;
+    container.style.height = `${vh}px`;
     container.style.overflow = "hidden";
 
     canvas.style.position = "absolute";
     canvas.style.width = `${targetW}px`;
     canvas.style.height = `${targetH}px`;
-    canvas.style.left = rotateFullscreen ? "50%" : "0";
-    canvas.style.top = rotateFullscreen ? "50%" : "0";
+    canvas.style.left = "50%";
+    canvas.style.top = "50%";
     canvas.style.transformOrigin = "center center";
+    canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
 
-    if (rotateFullscreen) {
-      const fsScale = Math.min(vw / targetH, vh / targetW);
-      canvas.style.transform = `translate(-50%, -50%) rotate(90deg) scale(${fsScale})`;
-    } else {
-      canvas.style.transform = "none";
+    if (!document.fullscreenElement && this.forceMobileFullscreen) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
     }
   }
 
