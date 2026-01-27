@@ -75,12 +75,24 @@ body {
 .credit-icon {
   width: 18px;
   height: 18px;
-  filter: invert(57%) sepia(91%) saturate(3489%) hue-rotate(352deg) brightness(100%) contrast(95%)
-    drop-shadow(0 0 2px rgba(250, 102, 15, 0.45));
+  filter: brightness(0) saturate(100%) invert(45%) sepia(96%) saturate(2854%) hue-rotate(2deg)
+    brightness(101%) contrast(104%);
 }
 
 .music-toggle {
   cursor: pointer;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.music-toggle.off {
+  opacity: 0.45;
+  filter: grayscale(1) brightness(0.5);
+}
+
+.music-credit .music-toggle {
+  margin-left: 6px;
 }
 
 .credits a {
@@ -217,6 +229,19 @@ body {
 @media (max-width: 900px) {
   .hud-tip {
     display: none;
+  }
+  .music-toggle {
+    display: none !important;
+  }
+  .music-credit {
+    display: none;
+  }
+  .music-credit-mobile {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #fa660f;
+    font-size: 14px;
   }
 }
 
