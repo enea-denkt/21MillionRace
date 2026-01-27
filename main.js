@@ -449,7 +449,7 @@ class GameScene extends Phaser.Scene {
     this.bgImage = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, "bg_manhattan")
       .setOrigin(0, 0)
       .setScrollFactor(0, 0)
-      .setTileScale(BG_SCALE, BG_SCALE);
+      .setTileScale(1, 1);
     this.bgTint = this.add.rectangle(0, 0, this.worldWidth, this.worldHeight, 0x0b0b14, 0.18)
       .setOrigin(0, 0)
       .setScrollFactor(0);
