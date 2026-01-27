@@ -105,6 +105,29 @@ body {
   border: 1px solid rgba(250, 102, 15, 0.35);
 }
 
+.fullscreen-btn {
+  display: none;
+  margin: 4px 0 8px;
+  padding: 8px 12px;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+  font-size: 14px;
+  color: #fa660f;
+  background: rgba(8, 12, 20, 0.7);
+  border: 1px solid rgba(250, 102, 15, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.fullscreen-btn:hover {
+  background: rgba(8, 12, 20, 0.9);
+}
+
+@media (max-width: 900px) {
+  .fullscreen-btn {
+    display: inline-block;
+  }
+}
+
 canvas {
   display: block;
   width: 100%;

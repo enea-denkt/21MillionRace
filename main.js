@@ -26,6 +26,7 @@ class GameScene extends Phaser.Scene {
     super("GameScene");
     this.worldWidth = WORLD_END_X;
     this.worldHeight = 720;
+    this.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth < 900);
   }
 
   tryEnterFullscreen() {
