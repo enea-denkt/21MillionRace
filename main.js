@@ -257,18 +257,10 @@ class GameScene extends Phaser.Scene {
     this.applyViewportScale();
     window.addEventListener("resize", () => this.applyViewportScale());
     window.addEventListener("orientationchange", () => {
-      // On rotate, try fullscreen if now landscape.
-      if (window.innerWidth > window.innerHeight) {
-        this.forceMobileFullscreen = true;
-        document.documentElement.requestFullscreen?.().catch(() => {});
-      } else {
-        this.forceMobileFullscreen = false;
+      if (this.isMobile) {
+        // Full re-init on mobile rotation to lock sizing to the new screen.
+        setTimeout(() => window.location.reload(), 250);
       }
-      // Recompute sizes after orientation settles
-      setTimeout(() => this.applyViewportScale(), 50);
-      setTimeout(() => this.applyViewportScale(), 300);
-      setTimeout(() => this.applyViewportScale(), 600);
-      setTimeout(() => window.scrollTo(0, 0), 650);
     });
 
     const mobileFsBtn = document.getElementById("mobile-fs-btn");
