@@ -38,6 +38,22 @@ class GameScene extends Phaser.Scene {
     // Button removed; no-op
   }
 
+  clampPageSize(vw, vh) {
+    const html = document.documentElement;
+    const bodyEl = document.body;
+    const layout = document.querySelector(".layout");
+    [html, bodyEl, layout].forEach((el) => {
+      if (!el) return;
+      el.style.width = `${vw}px`;
+      el.style.maxWidth = `${vw}px`;
+      el.style.height = `${vh}px`;
+      el.style.maxHeight = `${vh}px`;
+      el.style.margin = "0";
+      el.style.padding = "0";
+      el.style.overflowX = "hidden";
+    });
+  }
+
   applyViewportScale() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -71,6 +87,7 @@ class GameScene extends Phaser.Scene {
     // Mobile portrait: keep desktop zoom (1x); scale the canvas via CSS to fit width.
     if (portrait) {
       const cssScale = Math.min(vw / targetW, vh / targetH);
+      this.clampPageSize(vw, vh);
       this.cameras.main.setZoom(1);
       this.scale.resize(targetW, targetH);
       this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
@@ -92,22 +109,10 @@ class GameScene extends Phaser.Scene {
 
     // Mobile landscape: keep desktop zoom (1x); scale canvas via CSS, align top-left, hide fs button.
     const cssScale = Math.min(vw / targetW, vh / targetH);
+    this.clampPageSize(vw, vh);
     this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
-
-    // Force page width to device width to prevent horizontal overflow on real devices.
-    const html = document.documentElement;
-    const bodyEl = document.body;
-    const layout = document.querySelector(".layout");
-    [html, bodyEl, layout].forEach((el) => {
-      if (!el) return;
-      el.style.width = `${vw}px`;
-      el.style.maxWidth = `${vw}px`;
-      el.style.margin = "0";
-      el.style.padding = "0";
-      el.style.overflowX = "hidden";
-    });
 
     container.style.position = "relative";
     container.style.width = `${vw}px`;
@@ -255,6 +260,7 @@ class GameScene extends Phaser.Scene {
       // Recompute sizes after orientation settles
       setTimeout(() => this.applyViewportScale(), 50);
       setTimeout(() => this.applyViewportScale(), 300);
+      setTimeout(() => this.applyViewportScale(), 600);
     });
 
     const mobileFsBtn = document.getElementById("mobile-fs-btn");

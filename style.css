@@ -175,7 +175,7 @@ body {
   }
   .layout {
     padding: 0 4px 10px;
-    gap: 4px;
+    gap: 2px;
     justify-content: flex-start;
     width: 100vw;
     max-width: 100vw;
