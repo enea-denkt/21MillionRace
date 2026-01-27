@@ -96,6 +96,19 @@ class GameScene extends Phaser.Scene {
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
+    // Force page width to device width to prevent horizontal overflow on real devices.
+    const html = document.documentElement;
+    const bodyEl = document.body;
+    const layout = document.querySelector(".layout");
+    [html, bodyEl, layout].forEach((el) => {
+      if (!el) return;
+      el.style.width = `${vw}px`;
+      el.style.maxWidth = `${vw}px`;
+      el.style.margin = "0";
+      el.style.padding = "0";
+      el.style.overflowX = "hidden";
+    });
+
     container.style.position = "relative";
     container.style.width = `${vw}px`;
     container.style.height = `${targetH * cssScale}px`;
