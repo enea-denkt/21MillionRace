@@ -438,14 +438,21 @@ class GameScene extends Phaser.Scene {
   }
 
   createBackground() {
-    this.bgImage = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, "bg_manhattan")
+    this.bgImage = this.add.image(0, 0, "bg_manhattan").setOrigin(0, 0).setScrollFactor(0, 0);
+    const texW = this.bgImage.width || 1;
+    const texH = this.bgImage.height || 1;
+    // Cover the visible viewport without over-zooming (works on all devices).
+    const scale = Math.max(WIDTH / texW, HEIGHT / texH);
+    this.bgImage
+      .setDisplaySize(texW * scale, texH * scale)
+      .setScrollFactor(0) // stick to the camera so no gaps appear when moving
+      .setDepth(-10);
+
+    this.bgTint = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x0b0b14, 0.18)
       .setOrigin(0, 0)
-      .setScrollFactor(0, 0)
-      .setTileScale(1, 1);
-    this.bgTint = this.add.rectangle(0, 0, this.worldWidth, this.worldHeight, 0x0b0b14, 0.18)
-      .setOrigin(0, 0)
-      .setScrollFactor(0);
-    this.scanlineOverlay = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, "scanlines")
+      .setScrollFactor(0)
+      .setDepth(-9);
+    this.scanlineOverlay = this.add.tileSprite(0, 0, WIDTH, HEIGHT, "scanlines")
       .setOrigin(0, 0)
       .setScrollFactor(0)
       .setAlpha(0.18)
