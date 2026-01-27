@@ -50,30 +50,48 @@ class GameScene extends Phaser.Scene {
     const targetH = HEIGHT;
     const portrait = vh > vw;
     const container = document.getElementById("game");
-    const availW = portrait ? vh : vw;
-    const availH = portrait ? vw : vh;
-    // Only scale down on small screens; desktop keeps size 1
-    const scale = Math.min(availW / targetW, availH / targetH, 1);
+    const canvas = this.game.canvas;
+    if (!container || !canvas) return;
+
+    // Desktop / landscape: reset to defaults
+    if (!portrait) {
+      const scale = Math.min(vw / targetW, vh / targetH, 1);
+      this.cameras.main.setZoom(scale);
+      this.scale.resize(targetW, targetH);
+      this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
+
+      container.style.position = "relative";
+      container.style.width = `${targetW}px`;
+      container.style.height = `${targetH}px`;
+      container.style.overflow = "hidden";
+
+      canvas.style.position = "absolute";
+      canvas.style.left = "0";
+      canvas.style.top = "0";
+      canvas.style.transform = "none";
+      canvas.style.transformOrigin = "center center";
+      return;
+    }
+
+    // Portrait: rotate canvas so game stays landscape and fill viewport
+    const scale = Math.min(vw / targetH, vh / targetW); // swap because of 90deg rotation
     this.cameras.main.setZoom(scale);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
-    if (container) {
-      if (portrait) {
-        container.style.transform = `rotate(90deg) scale(${scale})`;
-        container.style.transformOrigin = "center center";
-        container.style.width = `${targetH}px`;
-        container.style.height = `${targetW}px`;
-        container.style.marginTop = `${(vh - targetW * scale) / 2}px`;
-        container.style.marginLeft = `${(vw - targetH * scale) / 2}px`;
-      } else {
-        container.style.transform = "none";
-        container.style.width = `${targetW}px`;
-        container.style.height = `${targetH}px`;
-        container.style.marginTop = "0";
-        container.style.marginLeft = "0";
-      }
-    }
+    container.style.position = "relative";
+    container.style.width = `${vw}px`;
+    container.style.height = `${vh}px`;
+    container.style.overflow = "hidden";
+
+    canvas.style.position = "absolute";
+    canvas.style.width = `${targetW}px`;
+    canvas.style.height = `${targetH}px`;
+    canvas.style.left = "50%";
+    canvas.style.top = "50%";
+    // translate to center after rotation
+    canvas.style.transformOrigin = "center center";
+    canvas.style.transform = `translate(-50%, -50%) rotate(90deg) scale(${scale})`;
   }
 
   preload() {
