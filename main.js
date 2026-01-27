@@ -30,18 +30,11 @@ class GameScene extends Phaser.Scene {
   }
 
   tryEnterFullscreen() {
-    const canvas = this.game.canvas;
-    if (!canvas) return;
-    if (!document.fullscreenElement) {
-      canvas.requestFullscreen?.().catch(() => {});
-    }
+    // Button removed; no-op
   }
 
   updateFullscreenIcon() {
-    if (!this.fullscreenBtn) return;
-    const on = !!document.fullscreenElement;
-    this.fullscreenBtn.setText(on ? "⛶" : "⛶");
-    this.fullscreenBtn.setAlpha(on ? 1 : 0.8);
+    // Button removed; no-op
   }
 
   applyViewportScale() {
@@ -210,7 +203,6 @@ class GameScene extends Phaser.Scene {
       this.applyViewportScale();
       this.updateFullscreenIcon();
     });
-    this.tryEnterFullscreen();
 
     // Enable footer music toggle (footer speaker icon)
     const footerIcons = document.querySelectorAll(".music-toggle");
@@ -1090,25 +1082,7 @@ class GameScene extends Phaser.Scene {
     }).setOrigin(1, 0).setScrollFactor(0);
 
     // Music toggle handled in credits footer (not in HUD)
-    // Fullscreen toggle button
-    this.fullscreenBtn = this.add.text(WIDTH - 48, 12, "⛶", {
-      fontFamily: "Trebuchet MS",
-      fontSize: "18px",
-      color: "#fa660f",
-      backgroundColor: "rgba(8,12,20,0.55)",
-      padding: { x: 6, y: 2 },
-    }).setOrigin(1, 0)
-      .setScrollFactor(0)
-      .setDepth(1004)
-      .setInteractive({ useHandCursor: true });
-
-    this.fullscreenBtn.on("pointerdown", () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen?.();
-      } else {
-        this.tryEnterFullscreen();
-      }
-    });
+    this.fullscreenBtn = null;
 
     this.btcChartFill = this.add.graphics().setScrollFactor(0).setDepth(1001);
     this.btcChartLine = this.add.graphics().setScrollFactor(0).setDepth(1002);

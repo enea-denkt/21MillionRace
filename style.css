@@ -123,8 +123,8 @@ body {
 }
 
 @media (max-width: 900px) {
-  .fullscreen-btn {
-    display: inline-block;
+  .hud-tip {
+    display: none;
   }
 }
 
