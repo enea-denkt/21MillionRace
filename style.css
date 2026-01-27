@@ -149,6 +149,10 @@ body {
   .mobile-only {
     display: inline-flex;
   }
+}
+
+/* Handle landscape phones/tablets too (up to small tablets). */
+@media (max-width: 1024px) {
   #game {
     width: 100vw;
     height: auto;
@@ -156,8 +160,14 @@ body {
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
+    outline: none;
+    box-shadow: none;
+    max-width: 100vw;
   }
   .layout {
+    padding: 0 4px 10px;
+    gap: 4px;
+    justify-content: flex-start;
     width: 100vw;
     max-width: 100vw;
     overflow-x: hidden;
@@ -173,13 +183,9 @@ body {
     max-width: 100vw;
     box-sizing: border-box;
   }
-  .layout {
-    padding: 0 4px 10px;
-    gap: 4px;
-    justify-content: flex-start;
-  }
   #game canvas {
     margin-top: 0 !important;
+    margin-left: 0 !important;
   }
 }
 
