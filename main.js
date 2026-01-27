@@ -121,7 +121,8 @@ class GameScene extends Phaser.Scene {
     // Mobile landscape: keep desktop zoom (1x); scale canvas to screen width, align top-left, hide fs button.
     const fullW = window.innerWidth;
     const fullH = window.innerHeight;
-    const cssScale = fullW / targetW;
+    // Fit canvas within viewport while maximizing width without spilling off screen.
+    const cssScale = Math.min(fullW / targetW, fullH / targetH);
     this.clampPageSize(fullW, fullH);
     this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
@@ -139,11 +140,11 @@ class GameScene extends Phaser.Scene {
     canvas.style.position = "absolute";
     canvas.style.width = `${targetW}px`;
     canvas.style.height = `${targetH}px`;
-    canvas.style.left = "0";
+    canvas.style.left = "50%";
     canvas.style.top = "0";
     canvas.style.margin = "0";
-    canvas.style.transformOrigin = "top left";
-    canvas.style.transform = `scale(${cssScale})`;
+    canvas.style.transformOrigin = "top center";
+    canvas.style.transform = `translateX(-50%) scale(${cssScale})`;
 
     if (!document.fullscreenElement && !this.fsAttempted) {
       this.fsAttempted = true;
