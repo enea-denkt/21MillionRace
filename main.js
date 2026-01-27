@@ -63,7 +63,8 @@ class GameScene extends Phaser.Scene {
   }
 
   applyViewportScale() {
-    const { vw, vh } = this.getViewportSize();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
     const targetW = WIDTH;
     const targetH = HEIGHT;
     const portrait = vh > vw;
@@ -117,9 +118,9 @@ class GameScene extends Phaser.Scene {
     }
 
     // Mobile landscape: keep desktop zoom (1x); scale canvas to screen width, align top-left, hide fs button.
-    const fullW = Math.min(window.screen.width || vw, vw);
-    const fullH = Math.min(window.screen.height || vh, vh);
-    const cssScale = Math.min(fullW / targetW, fullH / targetH);
+    const fullW = window.innerWidth;
+    const fullH = window.innerHeight;
+    const cssScale = fullW / targetW;
     this.clampPageSize(fullW, fullH);
     this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
