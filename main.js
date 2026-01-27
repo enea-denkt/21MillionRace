@@ -28,6 +28,7 @@ class GameScene extends Phaser.Scene {
     this.worldHeight = 720;
     this.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth < 900);
     this.forceMobileFullscreen = false;
+    this.fsAttempted = false;
   }
 
   tryEnterFullscreen() {
@@ -144,7 +145,8 @@ class GameScene extends Phaser.Scene {
     canvas.style.transformOrigin = "top left";
     canvas.style.transform = `scale(${cssScale})`;
 
-    if (!document.fullscreenElement) {
+    if (!document.fullscreenElement && !this.fsAttempted) {
+      this.fsAttempted = true;
       document.documentElement.requestFullscreen?.().catch(() => {});
     }
 
@@ -270,6 +272,7 @@ class GameScene extends Phaser.Scene {
     window.addEventListener("resize", () => this.applyViewportScale());
     window.addEventListener("orientationchange", () => {
       if (this.isMobile) {
+        this.fsAttempted = false; // allow a new fullscreen attempt after rotate
         // Full re-init on mobile rotation to lock sizing to the new screen.
         setTimeout(() => window.location.reload(), 250);
       }
