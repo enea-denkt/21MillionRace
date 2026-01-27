@@ -68,10 +68,10 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Mobile portrait: same zoom rules as desktop, centered (no extra zoom-out).
+    // Mobile portrait: keep desktop zoom (1x); scale the canvas via CSS to fit width.
     if (portrait) {
-      const scale = Math.min(vw / targetW, vh / targetH);
-      this.cameras.main.setZoom(scale);
+      const cssScale = Math.min(vw / targetW, vh / targetH);
+      this.cameras.main.setZoom(1);
       this.scale.resize(targetW, targetH);
       this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
@@ -86,13 +86,13 @@ class GameScene extends Phaser.Scene {
       canvas.style.left = "50%";
       canvas.style.top = "50%";
       canvas.style.transformOrigin = "center center";
-      canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      canvas.style.transform = `translate(-50%, -50%) scale(${cssScale})`;
       return;
     }
 
-    // Mobile landscape: same zoom as desktop, request fullscreen, no rotation.
-    const scale = Math.min(vw / targetW, vh / targetH);
-    this.cameras.main.setZoom(scale);
+    // Mobile landscape: keep desktop zoom (1x); scale canvas via CSS, rotate when fullscreen requested.
+    const cssScale = Math.min(vw / targetW, vh / targetH);
+    this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
@@ -107,7 +107,7 @@ class GameScene extends Phaser.Scene {
     canvas.style.left = "50%";
     canvas.style.top = "50%";
     canvas.style.transformOrigin = "center center";
-    canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    canvas.style.transform = `translate(-50%, -50%) scale(${cssScale})`;
 
     if (!document.fullscreenElement && this.forceMobileFullscreen) {
       document.documentElement.requestFullscreen?.().catch(() => {});
