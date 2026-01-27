@@ -107,8 +107,8 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Mobile landscape: keep desktop zoom (1x); scale canvas via CSS, align top-left, hide fs button.
-    const cssScale = Math.min(vw / targetW, vh / targetH);
+    // Mobile landscape: keep desktop zoom (1x); scale canvas to screen width, align top-left, hide fs button.
+    const cssScale = vw / targetW;
     this.clampPageSize(vw, vh);
     this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
@@ -256,11 +256,14 @@ class GameScene extends Phaser.Scene {
       if (window.innerWidth > window.innerHeight) {
         this.forceMobileFullscreen = true;
         document.documentElement.requestFullscreen?.().catch(() => {});
+      } else {
+        this.forceMobileFullscreen = false;
       }
       // Recompute sizes after orientation settles
       setTimeout(() => this.applyViewportScale(), 50);
       setTimeout(() => this.applyViewportScale(), 300);
       setTimeout(() => this.applyViewportScale(), 600);
+      setTimeout(() => window.scrollTo(0, 0), 650);
     });
 
     const mobileFsBtn = document.getElementById("mobile-fs-btn");
