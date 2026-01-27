@@ -38,6 +38,14 @@ class GameScene extends Phaser.Scene {
     // Button removed; no-op
   }
 
+  getViewportSize() {
+    const vv = window.visualViewport;
+    return {
+      vw: vv ? vv.width : window.innerWidth,
+      vh: vv ? vv.height : window.innerHeight,
+    };
+  }
+
   clampPageSize(vw, vh) {
     const html = document.documentElement;
     const bodyEl = document.body;
@@ -55,8 +63,7 @@ class GameScene extends Phaser.Scene {
   }
 
   applyViewportScale() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const { vw, vh } = this.getViewportSize();
     const targetW = WIDTH;
     const targetH = HEIGHT;
     const portrait = vh > vw;
