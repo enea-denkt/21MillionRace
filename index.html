@@ -5,19 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>21 Million Race</title>
     <link rel="icon" href="assets/Saylor.png" type="image/png" />
-    <link rel="stylesheet" href="style.css?v=20260227ad" />
+    <link rel="stylesheet" href="style.css?v=20260227ap" />
   </head>
   <body>
     <div class="layout">
       <div class="hud-tip">Press E for laser eyes • Double-tap ↑ to jump higher</div>
-      <button id="mobile-fs-btn" class="mobile-only" aria-label="Fullscreen">⛶</button>
+      <div id="mobile-fs-btn" class="mobile-only" aria-hidden="false" style="display:none">
+        <img src="assets/Rotate screen.svg" alt="Rotate" class="rotate-icon" />
+        <span class="rotate-label">Rotate to play</span>
+      </div>
       <div id="game"></div>
       <div class="credits">
-        <div class="credit-line music-credit">
-          Music: “We Call Them Poor” by <a href="https://x.com/lilbubble" target="_blank" rel="noopener">@lilbubble</a>
-          <img class="credit-icon music-toggle" src="assets/speaker.svg" alt="speaker icon" />
-        </div>
         <div class="credit-line game-credit">Game by <a href="https://x.com/EneaDenkt" target="_blank" rel="noopener">@EneaDenkt</a></div>
+        <div class="credit-line music-credit music-credit">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FA6610" class="bi bi-music-note" viewBox="0 0 16 16">
+            <path d="M9 13c0 1.105-1.12 2-2.5 2S4 14.105 4 13s1.12-2 2.5-2 2.5.895 2.5 2"/>
+            <path fill-rule="evenodd" d="M9 3v10H8V3z"/>
+            <path d="M8 2.82a1 1 0 0 1 .804-.98l3-.6A1 1 0 0 1 13 2.22V4L8 5z"/>
+          </svg>
+          <span>“We Call Them Poor” by <a href="https://x.com/lilbubble" target="_blank" rel="noopener">@lilbubble</a></span>
+        </div>
       </div>
       <div id="donate">
         <div class="donate-card">
@@ -27,13 +34,13 @@
           </div>
           <div class="qr-wrap">
             <img src="assets/QR%20code.jpg" alt="BTC donation QR code" />
-            <span class="qr-caption">Bitcoin addressseg</span>
+            <span class="qr-caption">Bitcoin address</span>
           </div>
         </div>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <script src="main.js?v=20260227af"></script>
+    <script src="main.js?v=20260227aq"></script>
     <!-- 100% privacy-first analytics -->
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
   </body>

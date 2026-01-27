@@ -108,7 +108,7 @@ class GameScene extends Phaser.Scene {
     }
 
     // Mobile landscape: keep desktop zoom (1x); scale canvas to screen width, align top-left, hide fs button.
-    const cssScale = vw / targetW;
+    const cssScale = Math.min(vw / targetW, vh / targetH);
     this.clampPageSize(vw, vh);
     this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
@@ -181,6 +181,11 @@ class GameScene extends Phaser.Scene {
     this.processSaylorTexture();
     this.createBackground();
     this.levelNumber = 1;
+
+    if (!this.isMobile) {
+      const fsBtn = document.getElementById("mobile-fs-btn");
+      if (fsBtn) fsBtn.style.display = "none";
+    }
 
     this.platforms = this.physics.add.staticGroup();
     this.movingPlatforms = this.physics.add.group({
