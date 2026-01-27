@@ -70,7 +70,7 @@ class GameScene extends Phaser.Scene {
 
     // Mobile portrait: scale to nearly full width, keep desktop proportions, no rotation.
     if (portrait) {
-      const marginFactor = 0.98;
+      const marginFactor = 0.95; // leave a small margin so nothing exceeds the viewport
       const scale = Math.min((vw * marginFactor) / targetW, vh / targetH);
       this.cameras.main.setZoom(scale);
       this.scale.resize(targetW, targetH);
