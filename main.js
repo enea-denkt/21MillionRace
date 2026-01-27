@@ -239,7 +239,9 @@ class GameScene extends Phaser.Scene {
         this.forceMobileFullscreen = true;
         document.documentElement.requestFullscreen?.().catch(() => {});
       }
-      setTimeout(() => this.applyViewportScale(), 200);
+      // Recompute sizes after orientation settles
+      setTimeout(() => this.applyViewportScale(), 50);
+      setTimeout(() => this.applyViewportScale(), 300);
     });
 
     const mobileFsBtn = document.getElementById("mobile-fs-btn");
