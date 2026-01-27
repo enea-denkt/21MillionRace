@@ -269,6 +269,8 @@ class GameScene extends Phaser.Scene {
     this.startIntro();
     this.shortJimSpawned = false;
     this.shortJimWaveSpawned = false;
+    const loader = document.getElementById("loader");
+    if (loader) loader.style.display = "none";
     this.applyViewportScale();
     window.addEventListener("resize", () => this.applyViewportScale());
     window.addEventListener("orientationchange", () => {
