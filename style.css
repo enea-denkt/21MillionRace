@@ -158,11 +158,13 @@ body {
 }
 
 .loader {
-  width: 100%;
+  position: fixed;
+  inset: 0;
+  background: #05060a;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px 0;
+  z-index: 20000;
 }
 
 .loader-dot {
@@ -170,6 +172,7 @@ body {
   font-weight: 700;
   letter-spacing: 1px;
   animation: pulse 1.2s ease-in-out infinite;
+  font-size: 18px;
 }
 
 @keyframes pulse {
