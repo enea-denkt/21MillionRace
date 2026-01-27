@@ -93,14 +93,16 @@ class GameScene extends Phaser.Scene {
 
     // Mobile portrait: keep desktop zoom (1x); scale the canvas via CSS to fit width.
     if (portrait) {
-      const cssScale = Math.min(vw / targetW, vh / targetH);
-      this.clampPageSize(vw, vh);
+      const fullW = Math.min(window.screen.width || vw, vw);
+      const fullH = Math.min(window.screen.height || vh, vh);
+      const cssScale = Math.min(fullW / targetW, fullH / targetH);
+      this.clampPageSize(fullW, fullH);
       this.cameras.main.setZoom(1);
       this.scale.resize(targetW, targetH);
       this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
       container.style.position = "relative";
-      container.style.width = `${vw}px`;
+      container.style.width = `${fullW}px`;
       container.style.height = `${targetH * cssScale}px`;
       container.style.overflow = "hidden";
 
@@ -115,14 +117,16 @@ class GameScene extends Phaser.Scene {
     }
 
     // Mobile landscape: keep desktop zoom (1x); scale canvas to screen width, align top-left, hide fs button.
-    const cssScale = Math.min(vw / targetW, vh / targetH);
-    this.clampPageSize(vw, vh);
+    const fullW = Math.min(window.screen.width || vw, vw);
+    const fullH = Math.min(window.screen.height || vh, vh);
+    const cssScale = Math.min(fullW / targetW, fullH / targetH);
+    this.clampPageSize(fullW, fullH);
     this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
     container.style.position = "relative";
-    container.style.width = `${vw}px`;
+    container.style.width = `${fullW}px`;
     container.style.height = `${targetH * cssScale}px`;
     container.style.overflow = "hidden";
     container.style.marginLeft = "0";
