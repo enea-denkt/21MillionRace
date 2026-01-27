@@ -28,6 +28,21 @@ class GameScene extends Phaser.Scene {
     this.worldHeight = 720;
   }
 
+  tryEnterFullscreen() {
+    const canvas = this.game.canvas;
+    if (!canvas) return;
+    if (!document.fullscreenElement) {
+      canvas.requestFullscreen?.().catch(() => {});
+    }
+  }
+
+  updateFullscreenIcon() {
+    if (!this.fullscreenBtn) return;
+    const on = !!document.fullscreenElement;
+    this.fullscreenBtn.setText(on ? "⛶" : "⛶");
+    this.fullscreenBtn.setAlpha(on ? 1 : 0.8);
+  }
+
   applyViewportScale() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -49,10 +64,14 @@ class GameScene extends Phaser.Scene {
         container.style.transformOrigin = "center center";
         container.style.width = `${targetH}px`;
         container.style.height = `${targetW}px`;
+        container.style.marginTop = `${(vh - targetW * scale) / 2}px`;
+        container.style.marginLeft = `${(vw - targetH * scale) / 2}px`;
       } else {
         container.style.transform = "none";
         container.style.width = `${targetW}px`;
         container.style.height = `${targetH}px`;
+        container.style.marginTop = "0";
+        container.style.marginLeft = "0";
       }
     }
   }
@@ -168,6 +187,11 @@ class GameScene extends Phaser.Scene {
     this.shortJimWaveSpawned = false;
     this.applyViewportScale();
     window.addEventListener("resize", () => this.applyViewportScale());
+    document.addEventListener("fullscreenchange", () => {
+      this.applyViewportScale();
+      this.updateFullscreenIcon();
+    });
+    this.tryEnterFullscreen();
 
     // Enable footer music toggle (footer speaker icon)
     const footerIcons = document.querySelectorAll(".music-toggle");
@@ -1046,8 +1070,26 @@ class GameScene extends Phaser.Scene {
       align: "right",
     }).setOrigin(1, 0).setScrollFactor(0);
 
-    // Music toggle button
     // Music toggle handled in credits footer (not in HUD)
+    // Fullscreen toggle button
+    this.fullscreenBtn = this.add.text(WIDTH - 48, 12, "⛶", {
+      fontFamily: "Trebuchet MS",
+      fontSize: "18px",
+      color: "#fa660f",
+      backgroundColor: "rgba(8,12,20,0.55)",
+      padding: { x: 6, y: 2 },
+    }).setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(1004)
+      .setInteractive({ useHandCursor: true });
+
+    this.fullscreenBtn.on("pointerdown", () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.();
+      } else {
+        this.tryEnterFullscreen();
+      }
+    });
 
     this.btcChartFill = this.add.graphics().setScrollFactor(0).setDepth(1001);
     this.btcChartLine = this.add.graphics().setScrollFactor(0).setDepth(1002);
