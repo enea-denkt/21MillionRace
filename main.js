@@ -28,6 +28,25 @@ class GameScene extends Phaser.Scene {
     this.worldHeight = 720;
   }
 
+  applyViewportScale() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const targetW = WIDTH;
+    const targetH = HEIGHT;
+    // Only scale down on small screens (mobile). Desktop keeps original size.
+    if (vw >= targetW && vh >= targetH) {
+      this.cameras.main.setZoom(1);
+      this.scale.resize(targetW, targetH);
+      this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
+      return;
+    }
+    // Small screen: scale to fit while keeping aspect
+    const scale = Math.min(vw / targetW, vh / targetH);
+    this.cameras.main.setZoom(scale);
+    this.scale.resize(targetW, targetH);
+    this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
+  }
+
   preload() {
     this.load.image("saylor", "assets/Saylor.png");
     this.load.image("bg_manhattan", "assets/background-digital-manhattan.png");
@@ -137,8 +156,8 @@ class GameScene extends Phaser.Scene {
     this.startIntro();
     this.shortJimSpawned = false;
     this.shortJimWaveSpawned = false;
-    this.checkDesktopOnly();
-    this.checkDesktopOnly();
+    this.applyViewportScale();
+    window.addEventListener("resize", () => this.applyViewportScale());
 
     // Enable footer music toggle (footer speaker icon)
     const footerIcons = document.querySelectorAll(".music-toggle");
@@ -1916,27 +1935,7 @@ class GameScene extends Phaser.Scene {
   }
 
   checkDesktopOnly() {
-    const isMobile =
-      this.sys.game.device.os.android ||
-      this.sys.game.device.os.iOS ||
-      this.sys.game.device.os.iPad;
-    const tinyScreen = window.innerWidth < 768 || window.innerHeight < 420;
-    if (isMobile || tinyScreen) {
-      this.physics.pause();
-      this.levelComplete = true;
-      const overlay = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x000000, 0.8)
-        .setOrigin(0, 0)
-        .setScrollFactor(0)
-        .setDepth(2500);
-      this.add.text(WIDTH / 2, HEIGHT / 2, "This game is available only on desktop.", {
-        fontFamily: "Trebuchet MS",
-        fontSize: "18px",
-        color: "#fa660f",
-        align: "center",
-      }).setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(2501);
-    }
+    // No-op: mobile is allowed; scaling handled separately.
   }
 
   playTone(freq, duration) {
@@ -1967,6 +1966,10 @@ const config = {
   width: WIDTH,
   height: HEIGHT,
   parent: "game",
+  scale: {
+    mode: Phaser.Scale.NONE,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
   physics: {
     default: "arcade",
     arcade: {
