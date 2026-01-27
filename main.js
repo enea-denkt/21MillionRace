@@ -33,18 +33,29 @@ class GameScene extends Phaser.Scene {
     const vh = window.innerHeight;
     const targetW = WIDTH;
     const targetH = HEIGHT;
-    // Only scale down on small screens (mobile). Desktop keeps original size.
-    if (vw >= targetW && vh >= targetH) {
-      this.cameras.main.setZoom(1);
-      this.scale.resize(targetW, targetH);
-      this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
-      return;
-    }
-    // Small screen: scale to fit while keeping aspect
-    const scale = Math.min(vw / targetW, vh / targetH);
+    const portrait = vh > vw;
+    // If portrait, rotate the container so the game stays landscape
+    const container = document.getElementById("game");
+    const availW = portrait ? vh : vw;
+    const availH = portrait ? vw : vh;
+    // Only scale down on small screens; desktop keeps size 1
+    const scale = Math.min(availW / targetW, availH / targetH, 1);
     this.cameras.main.setZoom(scale);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
+
+    if (container) {
+      if (portrait) {
+        container.style.transform = `rotate(90deg)`;
+        container.style.transformOrigin = "center center";
+        container.style.width = `${targetW}px`;
+        container.style.height = `${targetH}px`;
+      } else {
+        container.style.transform = "none";
+        container.style.width = `${targetW}px`;
+        container.style.height = `${targetH}px`;
+      }
+    }
   }
 
   preload() {
@@ -393,14 +404,13 @@ class GameScene extends Phaser.Scene {
   }
 
   createBackground() {
-    this.bgImage = this.add.tileSprite(0, 0, WIDTH, HEIGHT, "bg_manhattan")
+    this.bgImage = this.add.tileSprite(0, 0, this.worldWidth, HEIGHT, "bg_manhattan")
       .setOrigin(0, 0)
-      .setScrollFactor(0, 0)
-      .setDisplaySize(WIDTH, HEIGHT)
+      .setScrollFactor(0.1, 0)
       .setTileScale(BG_SCALE, BG_SCALE);
     this.bgTint = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x0b0b14, 0.18)
       .setOrigin(0, 0)
-      .setScrollFactor(0, 0);
+      .setScrollFactor(0);
     this.scanlineOverlay = this.add.tileSprite(0, 0, WIDTH, HEIGHT, "scanlines")
       .setOrigin(0, 0)
       .setScrollFactor(0, 0)
