@@ -100,6 +100,10 @@ class GameScene extends Phaser.Scene {
     container.style.width = `${vw}px`;
     container.style.height = `${targetH * cssScale}px`;
     container.style.overflow = "hidden";
+    container.style.marginLeft = "0";
+    container.style.marginRight = "0";
+    container.style.padding = "0";
+    container.style.transform = "none";
 
     canvas.style.position = "absolute";
     canvas.style.width = `${targetW}px`;
