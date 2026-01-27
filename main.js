@@ -34,7 +34,6 @@ class GameScene extends Phaser.Scene {
     const targetW = WIDTH;
     const targetH = HEIGHT;
     const portrait = vh > vw;
-    // If portrait, rotate the container so the game stays landscape
     const container = document.getElementById("game");
     const availW = portrait ? vh : vw;
     const availH = portrait ? vw : vh;
@@ -46,10 +45,10 @@ class GameScene extends Phaser.Scene {
 
     if (container) {
       if (portrait) {
-        container.style.transform = `rotate(90deg)`;
+        container.style.transform = `rotate(90deg) scale(${scale})`;
         container.style.transformOrigin = "center center";
-        container.style.width = `${targetW}px`;
-        container.style.height = `${targetH}px`;
+        container.style.width = `${targetH}px`;
+        container.style.height = `${targetW}px`;
       } else {
         container.style.transform = "none";
         container.style.width = `${targetW}px`;
@@ -404,16 +403,16 @@ class GameScene extends Phaser.Scene {
   }
 
   createBackground() {
-    this.bgImage = this.add.tileSprite(0, 0, this.worldWidth, HEIGHT, "bg_manhattan")
-      .setOrigin(0, 0)
-      .setScrollFactor(0.1, 0)
-      .setTileScale(BG_SCALE, BG_SCALE);
-    this.bgTint = this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x0b0b14, 0.18)
-      .setOrigin(0, 0)
-      .setScrollFactor(0);
-    this.scanlineOverlay = this.add.tileSprite(0, 0, WIDTH, HEIGHT, "scanlines")
+    this.bgImage = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, "bg_manhattan")
       .setOrigin(0, 0)
       .setScrollFactor(0, 0)
+      .setTileScale(BG_SCALE, BG_SCALE);
+    this.bgTint = this.add.rectangle(0, 0, this.worldWidth, this.worldHeight, 0x0b0b14, 0.18)
+      .setOrigin(0, 0)
+      .setScrollFactor(0);
+    this.scanlineOverlay = this.add.tileSprite(0, 0, this.worldWidth, this.worldHeight, "scanlines")
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
       .setAlpha(0.18)
       .setDepth(1000);
   }
