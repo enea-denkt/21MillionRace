@@ -139,7 +139,7 @@ class GameScene extends Phaser.Scene {
     canvas.style.transformOrigin = "top left";
     canvas.style.transform = `scale(${cssScale})`;
 
-    if (!document.fullscreenElement && this.forceMobileFullscreen) {
+    if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen?.().catch(() => {});
     }
 
