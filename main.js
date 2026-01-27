@@ -27,6 +27,7 @@ class GameScene extends Phaser.Scene {
     this.worldWidth = WORLD_END_X;
     this.worldHeight = 720;
     this.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth < 900);
+    this.forceMobileFullscreen = false;
   }
 
   tryEnterFullscreen() {
@@ -47,8 +48,8 @@ class GameScene extends Phaser.Scene {
     const canvas = this.game.canvas;
     if (!container || !canvas) return;
 
-    // Desktop / landscape: reset to defaults
-    if (!portrait) {
+    // Desktop or any landscape view: behave like before.
+    if (!portrait || !this.isMobile) {
       const scale = Math.min(vw / targetW, vh / targetH, 1);
       this.cameras.main.setZoom(scale);
       this.scale.resize(targetW, targetH);
@@ -67,25 +68,32 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Portrait: rotate canvas so game stays landscape and fill viewport
-    const scale = Math.min(vw / targetH, vh / targetW); // swap because of 90deg rotation
-    this.cameras.main.setZoom(scale);
+    // Mobile portrait behaves like desktop (no forced rotation) unless user requests fullscreen.
+    const baseScale = Math.min(vw / targetW, vh / targetH);
+    this.cameras.main.setZoom(baseScale);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
+    const rotateFullscreen = document.fullscreenElement || this.forceMobileFullscreen;
+
     container.style.position = "relative";
-    container.style.width = `${vw}px`;
-    container.style.height = `${vh}px`;
+    container.style.width = `${targetW}px`;
+    container.style.height = `${targetH}px`;
     container.style.overflow = "hidden";
 
     canvas.style.position = "absolute";
     canvas.style.width = `${targetW}px`;
     canvas.style.height = `${targetH}px`;
-    canvas.style.left = "50%";
-    canvas.style.top = "50%";
-    // translate to center after rotation
+    canvas.style.left = rotateFullscreen ? "50%" : "0";
+    canvas.style.top = rotateFullscreen ? "50%" : "0";
     canvas.style.transformOrigin = "center center";
-    canvas.style.transform = `translate(-50%, -50%) rotate(90deg) scale(${scale})`;
+
+    if (rotateFullscreen) {
+      const fsScale = Math.min(vw / targetH, vh / targetW);
+      canvas.style.transform = `translate(-50%, -50%) rotate(90deg) scale(${fsScale})`;
+    } else {
+      canvas.style.transform = "none";
+    }
   }
 
   preload() {
@@ -199,6 +207,23 @@ class GameScene extends Phaser.Scene {
     this.shortJimWaveSpawned = false;
     this.applyViewportScale();
     window.addEventListener("resize", () => this.applyViewportScale());
+    window.addEventListener("orientationchange", () => {
+      // On rotate, try fullscreen if now landscape.
+      if (window.innerWidth > window.innerHeight) {
+        this.forceMobileFullscreen = true;
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      }
+      setTimeout(() => this.applyViewportScale(), 200);
+    });
+
+    const mobileFsBtn = document.getElementById("mobile-fs-btn");
+    if (this.isMobile && mobileFsBtn) {
+      mobileFsBtn.addEventListener("click", () => {
+        this.forceMobileFullscreen = true;
+        document.documentElement.requestFullscreen?.().catch(() => {});
+        this.applyViewportScale();
+      });
+    }
     document.addEventListener("fullscreenchange", () => {
       this.applyViewportScale();
       this.updateFullscreenIcon();
