@@ -459,7 +459,15 @@ class GameScene extends Phaser.Scene {
         if (vw > vh) {
           this.clampPageSize(vw, vh);
           this.applyViewportScale();
+          // Auto-enter fullscreen when rotating to landscape
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen?.().catch(() => {});
+          }
         } else {
+          // Exit fullscreen when rotating to portrait
+          if (document.fullscreenElement) {
+            document.exitFullscreen?.().catch(() => {});
+          }
           setTimeout(() => window.location.reload(), 250);
         }
       }
