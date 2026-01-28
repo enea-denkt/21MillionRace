@@ -2376,7 +2376,7 @@ class GameScene extends Phaser.Scene {
     osc.frequency.value = freq;
     osc.type = "square";
 
-    gain.gain.value = 0.12;
+    gain.gain.value = 0.35;
     osc.connect(gain);
     gain.connect(context.destination);
 
