@@ -401,23 +401,6 @@ class GameScene extends Phaser.Scene {
     this.setupColliders();
     this.portalCelebrating = false;
 
-    // Initialize AudioContext early for game sounds on mobile
-    if (window.AudioContext || window.webkitAudioContext) {
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      // Resume AudioContext on first user interaction (required for iOS)
-      const resumeAudio = () => {
-        if (this.audioContext && this.audioContext.state === 'suspended') {
-          this.audioContext.resume();
-        }
-        document.removeEventListener('touchstart', resumeAudio);
-        document.removeEventListener('touchend', resumeAudio);
-        document.removeEventListener('click', resumeAudio);
-      };
-      document.addEventListener('touchstart', resumeAudio, { once: true });
-      document.addEventListener('touchend', resumeAudio, { once: true });
-      document.addEventListener('click', resumeAudio, { once: true });
-    }
-
     // Start looping soundtrack using HTMLAudio (muted autoplay, then unmute with retries)
     this.musicOn = true;
     this.bgmAudio = new Audio("assets/We%20call%20them%20poor.mp3");
@@ -455,6 +438,10 @@ class GameScene extends Phaser.Scene {
     }, 500);
     // Fallback: on first interaction
     const unlock = () => {
+      // Resume AudioContext for game sounds on mobile browsers
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
       tryPlay();
       this.input.off("pointerdown", unlock);
       this.input.keyboard?.off("keydown", unlock);
