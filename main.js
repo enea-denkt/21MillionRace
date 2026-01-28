@@ -400,6 +400,24 @@ class GameScene extends Phaser.Scene {
     this.mobileControls = this.isMobile ? new MobileControls({ isMobile: this.isMobile }) : null;
     this.setupColliders();
     this.portalCelebrating = false;
+
+    // Initialize AudioContext early for game sounds on mobile
+    if (window.AudioContext || window.webkitAudioContext) {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      // Resume AudioContext on first user interaction (required for iOS)
+      const resumeAudio = () => {
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+          this.audioContext.resume();
+        }
+        document.removeEventListener('touchstart', resumeAudio);
+        document.removeEventListener('touchend', resumeAudio);
+        document.removeEventListener('click', resumeAudio);
+      };
+      document.addEventListener('touchstart', resumeAudio, { once: true });
+      document.addEventListener('touchend', resumeAudio, { once: true });
+      document.addEventListener('click', resumeAudio, { once: true });
+    }
+
     // Start looping soundtrack using HTMLAudio (muted autoplay, then unmute with retries)
     this.musicOn = true;
     this.bgmAudio = new Audio("assets/We%20call%20them%20poor.mp3");
