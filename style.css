@@ -166,8 +166,8 @@ body {
   position: absolute;
   right: 16px;
   bottom: 30px;
-  width: clamp(70px, 16vw, 50px);
-  height: clamp(70px, 16vw, 50px);
+  width: clamp(70px, 16vw, 30px);
+  height: clamp(70px, 16vw, 30px);
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.3);
@@ -185,8 +185,8 @@ body {
   position: absolute;
   left: 16px;
   bottom: 14px;
-  width: clamp(120px, 26vw, 160px);
-  height: clamp(120px, 26vw, 160px);
+  width: clamp(120px, 26vw, 60px);
+  height: clamp(120px, 26vw, 60px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.14);
   border: 6px solid rgba(255, 255, 255, 0.22);
