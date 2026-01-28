@@ -109,6 +109,8 @@ body {
   height: min(calc(100vw * 0.5625), 540px); /* keep aspect 16:9 when fitting width */
   outline: 2px solid #1e314a;
   box-shadow: 0 0 40px rgba(0, 255, 210, 0.18);
+  position: relative;
+  overflow: hidden;
 }
 
 .hud-tip {
@@ -144,114 +146,99 @@ body {
   display: none;
 }
 
-#mobile-fs-btn {
-  margin-top: 2px;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  color: #ffffff;
-  font-size: 16px;
-  cursor: default;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.rotate-icon {
-  width: 18px;
-  height: 18px;
-  filter: invert(100%);
-}
-
-.rotate-label {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.loader {
-  position: fixed;
+#mobile-controls {
+  position: absolute;
   inset: 0;
-  background: #05060a;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 20000;
+  z-index: 1600;
+  pointer-events: none;
+  display: none;
 }
 
-.loader-dot {
+#mobile-controls.visible {
+  display: block;
+}
+
+#mobile-controls.visible > * {
+  pointer-events: auto;
+}
+
+#mobile-action {
+  position: absolute;
+  right: 16px;
+  bottom: 30px;
+  width: clamp(70px, 16vw, 50px);
+  height: clamp(70px, 16vw, 50px);
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
   color: #fa660f;
-  font-weight: 700;
-  letter-spacing: 1px;
-  animation: pulse 1.2s ease-in-out infinite;
-  font-size: 18px;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.2;
-  }
-}
-
-.loader {
-  width: 100%;
+  font-size: clamp(32px, 7vw, 40px);
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 10px 0;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: none;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
-.loader-dot {
+#mobile-dpad {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  width: clamp(120px, 26vw, 160px);
+  height: clamp(120px, 26vw, 160px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 6px solid rgba(255, 255, 255, 0.22);
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  pointer-events: auto;
+  touch-action: none;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+}
+
+#mobile-dpad::before {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+#mobile-dpad .dpad-up,
+#mobile-dpad .dpad-left,
+#mobile-dpad .dpad-right {
+  position: absolute;
+  font-size: clamp(22px, 4.5vw, 28px);
   color: #fa660f;
-  font-weight: 700;
-  letter-spacing: 1px;
-  animation: pulse 1.2s ease-in-out infinite;
+  user-select: none;
+  pointer-events: none;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.2;
-  }
+#mobile-dpad .dpad-up {
+  top: 18%;
 }
 
-@media (max-width: 900px) {
-  .hud-tip {
-    display: none;
-  }
-  .music-toggle {
-    display: none !important;
-  }
-  .music-credit {
-    display: none;
-  }
-  .music-credit-mobile {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #fa660f;
-    font-size: 14px;
-  }
+#mobile-dpad .dpad-left {
+  left: 18%;
 }
 
-@media (max-width: 900px) and (orientation: portrait) {
-  .mobile-only {
-    display: inline-flex !important;
-  }
+#mobile-dpad .dpad-right {
+  right: 18%;
 }
 
-/* Handle landscape phones/tablets too (up to small tablets). */
+#mobile-dpad .dpad-row {
+  display: none; /* deprecated row layout */
+}
+
+#mobile-controls button {
+  font-family: inherit;
+}
+
+
 @media (max-width: 1024px) {
   html,
   body {

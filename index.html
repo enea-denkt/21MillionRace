@@ -12,12 +12,19 @@
       <div id="loader" class="loader">
         <span class="loader-dot">Loading…</span>
       </div>
-      <div class="hud-tip">Press E for laser eyes • Double-tap ↑ to jump higher</div>
+      <div class="hud-tip mobile-only">Press E for laser eyes • Double-tap ↑ to jump higher</div>
       <div id="mobile-fs-btn" class="mobile-only" aria-hidden="false" style="display:none">
         <img src="assets/Rotate screen.svg" alt="Rotate" class="rotate-icon" />
         <span class="rotate-label">Rotate to play</span>
       </div>
-      <div id="game"></div>
+      <div id="game">
+        <div id="mobile-controls" aria-hidden="true">
+        <button id="mobile-action" type="button" aria-label="Laser eyes">⚡</button>
+        <div id="mobile-dpad" aria-label="Movement controls">
+         
+        </div>
+      </div>
+      </div>
       <div class="credits">
         <div class="credit-line game-credit">Game by <a href="https://x.com/EneaDenkt" target="_blank" rel="noopener">@EneaDenkt</a></div>
         <div class="credit-line music-credit music-credit">

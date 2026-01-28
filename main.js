@@ -21,6 +21,164 @@ const COIN_Y_LIFT = -40;
 const WORLD_END_X = 18000;
 const TEST_SPAWN_NEAR_END = false; // set to true when testing near the end
 
+class MobileControls {
+  constructor({ isMobile }) {
+    this.isMobile = Boolean(isMobile);
+    this.container = document.getElementById("mobile-controls");
+    this.actionBtn = document.getElementById("mobile-action");
+    this.dpad = document.getElementById("mobile-dpad");
+    this.state = {
+      left: false,
+      right: false,
+      up: false,
+      action: false,
+    };
+    this._lastJump = false;
+    this._lastAction = false;
+    this._activeDpadPointerId = null;
+    this._activeActionPointerId = null;
+    this.visible = false;
+    if (!this.container || !this.actionBtn || !this.dpad) {
+      return;
+    }
+    this.onActionDown = this.onActionDown.bind(this);
+    this.onActionUp = this.onActionUp.bind(this);
+    this.onDpadDown = this.onDpadDown.bind(this);
+    this.onDpadMove = this.onDpadMove.bind(this);
+    this.onDpadUp = this.onDpadUp.bind(this);
+    this.bindAction();
+    this.bindDpad();
+  }
+
+  bindAction() {
+    this.actionBtn.addEventListener("pointerdown", this.onActionDown);
+    ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) =>
+      this.actionBtn.addEventListener(eventName, this.onActionUp)
+    );
+  }
+
+  bindDpad() {
+    this.dpad.addEventListener("pointerdown", this.onDpadDown);
+    this.dpad.addEventListener("pointermove", this.onDpadMove);
+    ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) =>
+      this.dpad.addEventListener(eventName, this.onDpadUp)
+    );
+  }
+
+  onActionDown(event) {
+    if (this._activeActionPointerId !== null) return;
+    this._activeActionPointerId = event.pointerId;
+    this.state.action = true;
+    this.actionBtn.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  onActionUp(event) {
+    if (this._activeActionPointerId !== event.pointerId) return;
+    this.state.action = false;
+    this._activeActionPointerId = null;
+    this.actionBtn.releasePointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  onDpadDown(event) {
+    if (this._activeDpadPointerId !== null) return;
+    this._activeDpadPointerId = event.pointerId;
+    this.dpad.setPointerCapture?.(event.pointerId);
+    this.updateDirectionFromEvent(event);
+    event.preventDefault();
+  }
+
+  onDpadMove(event) {
+    if (event.pointerId !== this._activeDpadPointerId) return;
+    this.updateDirectionFromEvent(event);
+    event.preventDefault();
+  }
+
+  onDpadUp(event) {
+    if (event.pointerId !== this._activeDpadPointerId) return;
+    this._activeDpadPointerId = null;
+    this.dpad.releasePointerCapture?.(event.pointerId);
+    this.resetDirections();
+    event.preventDefault();
+  }
+
+  updateDirectionFromEvent(event) {
+    if (!this.dpad) return;
+    const rect = this.dpad.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const halfW = rect.width / 2;
+    const halfH = rect.height / 2;
+    const centerX = rect.left + halfW;
+    const centerY = rect.top + halfH;
+    const dx = (event.clientX - centerX) / halfW;
+    const dy = (centerY - event.clientY) / halfH;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    const threshold = 0.28;
+    this.state.left = dx < -threshold && absDx > absDy;
+    this.state.right = dx > threshold && absDx > absDy;
+    this.state.up = dy > threshold && absDy > absDx;
+  }
+
+  resetDirections() {
+    this.state.left = false;
+    this.state.right = false;
+    this.state.up = false;
+  }
+
+  resetPointers() {
+    if (this._activeDpadPointerId !== null) {
+      this.dpad.releasePointerCapture?.(this._activeDpadPointerId);
+      this._activeDpadPointerId = null;
+    }
+    if (this._activeActionPointerId !== null) {
+      this.actionBtn.releasePointerCapture?.(this._activeActionPointerId);
+      this._activeActionPointerId = null;
+    }
+  }
+
+  updateVisibility(show) {
+    if (!this.container) return;
+    const shouldShow = Boolean(this.isMobile && show);
+    if (shouldShow === this.visible) return;
+    this.visible = shouldShow;
+    this.container.classList.toggle("visible", shouldShow);
+    this.container.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+    if (!shouldShow) {
+      this.resetState();
+    }
+  }
+
+  resetState() {
+    this.resetDirections();
+    this.state.action = false;
+    this._lastJump = false;
+    this._lastAction = false;
+    this.resetPointers();
+  }
+
+  consumeJump() {
+    if (!this.visible) {
+      this._lastJump = false;
+      return false;
+    }
+    const just = this.state.up && !this._lastJump;
+    this._lastJump = this.state.up;
+    return just;
+  }
+
+  consumeAction() {
+    if (!this.visible) {
+      this._lastAction = false;
+      return false;
+    }
+    const just = this.state.action && !this._lastAction;
+    this._lastAction = this.state.action;
+    return just;
+  }
+}
+
 class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
@@ -69,6 +227,9 @@ class GameScene extends Phaser.Scene {
     const targetW = WIDTH;
     const targetH = HEIGHT;
     const portrait = vh > vw;
+    const touchCapable = Boolean(navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || "ontouchstart" in window;
+    const showMobileOverlay = this.isMobile && !portrait && vw <= 900 && touchCapable;
+    this.mobileControls?.updateVisibility(showMobileOverlay);
     const container = document.getElementById("game");
     const canvas = this.game.canvas;
     if (!container || !canvas) return;
@@ -221,6 +382,7 @@ class GameScene extends Phaser.Scene {
     this.createHUD();
     this.createTutorial();
     this.setupInput();
+    this.mobileControls = this.isMobile ? new MobileControls({ isMobile: this.isMobile }) : null;
     this.setupColliders();
     this.portalCelebrating = false;
     // Start looping soundtrack using HTMLAudio (muted autoplay, then unmute with retries)
@@ -1312,8 +1474,9 @@ class GameScene extends Phaser.Scene {
   }
 
   updatePlayer(time) {
-    const left = this.cursors.left.isDown || this.keyA.isDown;
-    const right = this.cursors.right.isDown || this.keyD.isDown;
+    const mobileControls = this.mobileControls;
+    const left = this.cursors.left.isDown || this.keyA.isDown || mobileControls?.state.left;
+    const right = this.cursors.right.isDown || this.keyD.isDown || mobileControls?.state.right;
 
     if (left) {
       this.player.body.setVelocityX(-200);
@@ -1330,7 +1493,8 @@ class GameScene extends Phaser.Scene {
     const jumpPressed =
       Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
       Phaser.Input.Keyboard.JustDown(this.keyW) ||
-      Phaser.Input.Keyboard.JustDown(this.cursors.space);
+      Phaser.Input.Keyboard.JustDown(this.cursors.space) ||
+      Boolean(mobileControls?.consumeJump());
 
     if (jumpPressed) {
       const grounded = this.player.body.blocked.down || time - this.lastOnGround <= 120;
@@ -1352,7 +1516,9 @@ class GameScene extends Phaser.Scene {
       this.jumpsUsed = 0;
     }
 
-    const shootPressed = Phaser.Input.Keyboard.JustDown(this.keyE);
+    const shootPressed =
+      Phaser.Input.Keyboard.JustDown(this.keyE) ||
+      Boolean(mobileControls?.consumeAction()); // Action button currently triggers the laser; swap to jump by routing the consumed action to the jump block if desired.
 
     if (shootPressed && time - this.lastShot > 280) {
       this.lastShot = time;
