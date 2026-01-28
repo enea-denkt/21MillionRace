@@ -231,6 +231,15 @@ class GameScene extends Phaser.Scene {
     const touchCapable = Boolean(navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || "ontouchstart" in window;
     const showMobileOverlay = this.isMobile && !portrait && vw <= 900 && touchCapable;
     this.mobileControls?.updateVisibility(showMobileOverlay);
+    if (this.isMobile) {
+      const html = document.documentElement;
+      const body = document.body;
+      [html, body].forEach((el) => {
+        el.style.overflowX = "hidden";
+        el.style.maxWidth = `${vw}px`;
+        el.style.width = `${vw}px`;
+      });
+    }
     const container = document.getElementById("game");
     const canvas = this.game.canvas;
     if (!container || !canvas) return;
@@ -439,16 +448,41 @@ class GameScene extends Phaser.Scene {
     window.addEventListener("orientationchange", () => {
       if (this.isMobile) {
         this.fsAttempted = false; // allow a new fullscreen attempt after rotate
-        // Immediately clamp to new viewport to avoid interim overflow
-        const vv = window.visualViewport;
-        const vw = vv ? vv.width : window.innerWidth;
-        const vh = vv ? vv.height : window.innerHeight;
-        this.clampPageSize(vw, vh);
-        this.applyViewportScale();
         // Full re-init on mobile rotation to lock sizing to the new screen.
         setTimeout(() => window.location.reload(), 250);
       }
     });
+    // Prevent double-tap zoom and stray scroll on mobile
+    if (this.isMobile) {
+      const canvas = this.game?.canvas;
+      let lastTouchEnd = 0;
+      const blockZoom = (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd < 350) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      };
+      if (canvas) {
+        ["touchstart", "touchmove", "touchend"].forEach((ev) => {
+          canvas.addEventListener(
+            ev,
+            (e) => {
+              if (ev !== "touchmove") blockZoom(e);
+              e.preventDefault();
+            },
+            { passive: false }
+          );
+        });
+      }
+      const html = document.documentElement;
+      const bodyEl = document.body;
+      [html, bodyEl].forEach((el) => {
+        if (!el) return;
+        el.style.overflowX = "hidden";
+        el.style.touchAction = "none";
+      });
+    }
 
 
     const mobileFsBtn = document.getElementById("mobile-fs-btn");
