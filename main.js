@@ -307,8 +307,7 @@ class GameScene extends Phaser.Scene {
     canvas.style.transformOrigin = "top center";
     canvas.style.transform = `translateX(-50%) scale(${cssScale})`;
 
-    if (!document.fullscreenElement && !this.fsAttempted) {
-      this.fsAttempted = true;
+    if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen?.().catch(() => {});
     }
 
@@ -442,6 +441,20 @@ class GameScene extends Phaser.Scene {
         setTimeout(() => window.location.reload(), 250);
       }
     });
+
+    // Prevent touch scrolling / double-tap zoom within the game area on mobile
+    const gameContainer = document.getElementById("game");
+    if (gameContainer && this.isMobile) {
+      ["touchstart", "touchmove", "touchend"].forEach((ev) => {
+        gameContainer.addEventListener(
+          ev,
+          (e) => {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+      });
+    }
 
     const mobileFsBtn = document.getElementById("mobile-fs-btn");
     if (this.isMobile && mobileFsBtn) {
