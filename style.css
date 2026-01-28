@@ -306,12 +306,16 @@ body {
     height: 100vh;
     max-width: 100vw;
     max-height: 100vh;
+    margin: 0;
+    padding: 0;
   }
   .layout {
     padding: 0;
     gap: 2px;
     width: 100vw;
     max-width: 100vw;
+    margin: 0;
+    overflow: hidden;
   }
   .credits,
   #donate,
@@ -322,7 +326,9 @@ body {
     display: none !important;
   }
   #game {
+    width: 100vw;
     max-width: 100vw;
+    margin: 0;
   }
 }
 
