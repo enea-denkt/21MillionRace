@@ -292,30 +292,34 @@ class GameScene extends Phaser.Scene {
     // Mobile landscape: keep desktop zoom (1x); scale canvas to screen width, align top-left, hide fs button.
     const fullW = window.innerWidth;
     const fullH = window.innerHeight;
-    // Fit canvas within viewport while maximizing width without spilling off screen.
-    const cssScale = Math.min(fullW / targetW, fullH / targetH);
+    // Fit canvas within viewport; never scale beyond 1 to avoid spilling.
+    const cssScale = Math.min(1, Math.min(fullW / targetW, fullH / targetH));
     this.clampPageSize(fullW, fullH);
     this.cameras.main.setZoom(1);
     this.scale.resize(targetW, targetH);
     this.cameras.main.setBounds(0, 0, this.worldWidth, HEIGHT);
 
     container.style.position = "relative";
-    container.style.width = `${fullW}px`;
+    const containerW = targetW * cssScale;
+    const containerH = targetH * cssScale;
+    container.style.width = `${containerW}px`;
     container.style.height = `${targetH * cssScale}px`;
     container.style.overflow = "hidden";
     container.style.marginLeft = "0";
     container.style.marginRight = "0";
     container.style.padding = "0";
     container.style.transform = "none";
+    container.style.maxWidth = `${fullW}px`;
+    container.style.maxHeight = `${fullH}px`;
 
     canvas.style.position = "absolute";
     canvas.style.width = `${targetW}px`;
     canvas.style.height = `${targetH}px`;
-    canvas.style.left = "50%";
+    canvas.style.left = "0";
     canvas.style.top = "0";
     canvas.style.margin = "0";
-    canvas.style.transformOrigin = "top center";
-    canvas.style.transform = `translateX(-50%) scale(${cssScale})`;
+    canvas.style.transformOrigin = "top left";
+    canvas.style.transform = `scale(${cssScale})`;
 
     if (!document.fullscreenElement && !this.fsAttempted) {
       this.fsAttempted = true;
