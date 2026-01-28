@@ -187,6 +187,7 @@ class GameScene extends Phaser.Scene {
     this.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth < 900);
     this.forceMobileFullscreen = false;
     this.fsAttempted = false;
+    this.wasPausedByVisibility = false;
   }
 
   tryEnterFullscreen() {
@@ -516,6 +517,25 @@ class GameScene extends Phaser.Scene {
     document.addEventListener("fullscreenchange", () => {
       this.applyViewportScale();
       this.updateFullscreenIcon();
+    });
+
+    // Pause music when page is hidden (minimized, tab switched, etc.)
+    document.addEventListener("visibilitychange", () => {
+      if (this.bgmAudio) {
+        if (document.hidden) {
+          // Page is hidden, pause music
+          if (!this.bgmAudio.paused) {
+            this.bgmAudio.pause();
+            this.wasPausedByVisibility = true;
+          }
+        } else {
+          // Page is visible again, resume music if it was playing
+          if (this.musicOn && this.wasPausedByVisibility) {
+            this.bgmAudio.play().catch(() => {});
+            this.wasPausedByVisibility = false;
+          }
+        }
+      }
     });
 
     // Enable footer music toggle (footer speaker icon)
