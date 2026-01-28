@@ -496,6 +496,32 @@ class GameScene extends Phaser.Scene {
           );
         });
       }
+
+      // Prevent all zoom gestures on the entire document
+      const preventZoom = (e) => {
+        if (e.touches && e.touches.length > 1) {
+          // Prevent pinch zoom
+          e.preventDefault();
+        }
+        const now = Date.now();
+        if (now - lastTouchEnd < 500) {
+          // Prevent double-tap zoom
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      };
+
+      document.addEventListener('touchstart', preventZoom, { passive: false });
+      document.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      document.addEventListener('touchend', preventZoom, { passive: false });
+
+      // Prevent context menu on long press
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+
       const html = document.documentElement;
       const bodyEl = document.body;
       [html, bodyEl].forEach((el) => {
@@ -2334,6 +2360,11 @@ class GameScene extends Phaser.Scene {
 
     const context = this.audioContext || new (window.AudioContext || window.webkitAudioContext)();
     this.audioContext = context;
+
+    // Resume AudioContext if suspended (required on mobile browsers)
+    if (context.state === 'suspended') {
+      context.resume();
+    }
 
     const osc = context.createOscillator();
     const gain = context.createGain();
