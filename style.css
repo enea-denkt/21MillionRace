@@ -146,6 +146,10 @@ body {
   display: none;
 }
 
+.desktop-only {
+  display: block;
+}
+
 #mobile-controls {
   position: absolute;
   inset: 0;
@@ -255,6 +259,9 @@ body {
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+  }
+  .desktop-only {
+    display: none !important;
   }
   body, html {
     -webkit-text-size-adjust: 100%;
