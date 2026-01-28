@@ -438,6 +438,12 @@ class GameScene extends Phaser.Scene {
     window.addEventListener("orientationchange", () => {
       if (this.isMobile) {
         this.fsAttempted = false; // allow a new fullscreen attempt after rotate
+        // Immediately clamp to the new viewport dimensions to avoid oversized layout.
+        const vv = window.visualViewport;
+        const vw = vv ? vv.width : window.innerWidth;
+        const vh = vv ? vv.height : window.innerHeight;
+        this.clampPageSize(vw, vh);
+        this.applyViewportScale();
         // Full re-init on mobile rotation to lock sizing to the new screen.
         setTimeout(() => window.location.reload(), 250);
       }
