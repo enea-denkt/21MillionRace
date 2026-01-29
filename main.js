@@ -390,6 +390,9 @@ class GameScene extends Phaser.Scene {
     this.createLevel();
     this.createCollectibles();
     this.createEnemies();
+    // Set up enemy collisions immediately to prevent falling through platforms
+    this.physics.add.collider(this.enemies, this.platforms);
+    this.physics.add.collider(this.enemies, this.movingPlatforms);
     this.enemyProjectiles = this.physics.add.group({ allowGravity: false, immovable: false });
     this.createPlayer();
     this.createCheckpoint();
@@ -449,8 +452,6 @@ class GameScene extends Phaser.Scene {
     this.input.once("pointerdown", unlock);
     this.input.keyboard?.once("keydown", unlock);
     this.startIntro();
-    this.shortJimSpawned = false;
-    this.shortJimWaveSpawned = false;
     const loader = document.getElementById("loader");
     if (loader) loader.style.display = "none";
     this.applyViewportScale();
@@ -1132,69 +1133,69 @@ class GameScene extends Phaser.Scene {
     this.shortJimWaveScheduled = false;
 
     let baseSpawns = [
-      [180, 520, 120, 240],
-      [380, 520, 320, 440],
-      [700, 520, 620, 780],
-      [1050, 520, 970, 1130],
-      [1300, 520, 1220, 1380],
-      [1700, 520, 1620, 1780],
-      [1500, 420, 1400, 1620],
-      [1680, 420, 1600, 1760],
-      [1860, 420, 1760, 1940],
-      [2060, 420, 1980, 2140],
-      [2300, 420, 2200, 2420],
-      [2600, 420, 2500, 2720],
-      [3200, 420, 3120, 3320],
-      [3400, 420, 3280, 3520],
-      [3800, 400, 3700, 3920],
-      [4300, 400, 4200, 4420],
-      [4550, 400, 4460, 4660],
-      [4760, 400, 4680, 4840],
-      [5200, 380, 5120, 5320],
-      [5600, 360, 5500, 5720],
-      [6000, 420, 5900, 6100],
+      [1050, 490, 970, 1120],
+      [1180, 410, 1110, 1250],
+      [1101, 490, 1020, 1120],
+      [1301, 490, 1220, 1380],
+      [1300, 490, 1220, 1380],
+      [1700, 490, 1620, 1710],
+      [1500, 400, 1400, 1620],
+      [1680, 400, 1600, 1760],
+      [1860, 400, 1760, 1940],
+      [2060, 400, 1980, 2140],
+      [2300, 400, 2200, 2420],
+      [2600, 400, 2500, 2720],
+      [3200, 400, 3120, 3320],
+      [3400, 400, 3280, 3520],
+      [3800, 380, 3700, 3920],
+      [4300, 380, 4200, 4420],
+      [4550, 380, 4460, 4660],
+      [4760, 380, 4680, 4840],
+      [5200, 360, 5120, 5320],
+      [5600, 340, 5500, 5720],
+      [6000, 490, 5900, 6100],
       [6200, 420, 6120, 6320],
       [6400, 400, 6300, 6500],
-      [6600, 400, 6500, 6700],
-      [6800, 380, 6680, 6920],
-      [7000, 380, 6900, 7100],
+      [6600, 490, 6500, 6700],
+      [6800, 490, 6680, 6920],
+      [7000, 370, 6900, 7100],
       [7200, 360, 7100, 7300],
-      [7600, 340, 7480, 7720],
-      [7800, 340, 7700, 7900],
-      [8000, 330, 7900, 8100],
-      [8200, 360, 8080, 8320],
+      [7600, 490, 7480, 7720],
+      [7800, 380, 7700, 7900],
+      [8000, 360, 7900, 8100],
+      [8200, 490, 8080, 8320],
       [8600, 340, 8480, 8720],
-      [8800, 340, 8700, 8900],
-      [9000, 320, 8880, 9120],
-      [9400, 320, 9300, 9500],
-      [9800, 320, 9680, 9920],
-      [10100, 320, 10000, 10200],
-      [10500, 300, 10400, 10600],
-      [10400, 300, 10300, 10500],
-      [11000, 300, 10900, 11100],
-      [11200, 300, 11100, 11300],
-      [11600, 300, 11500, 11700],
-      [11800, 300, 11700, 11900],
-      [12200, 280, 12100, 12300],
-      [12400, 280, 12300, 12500],
-      [12800, 280, 12700, 12900],
-      [13000, 280, 12900, 13100],
-      [13400, 260, 13300, 13500],
-      [13600, 260, 13500, 13700],
-      [14000, 260, 13900, 14100],
-      [14200, 260, 14100, 14300],
-      [14600, 240, 14500, 14700],
-      [14800, 240, 14700, 14900],
-      [15200, 240, 15100, 15300],
-      [15400, 240, 15300, 15500],
-      [15800, 220, 15700, 15900],
-      [16000, 220, 15900, 16100],
-      [16400, 220, 16300, 16500],
-      [16600, 220, 16500, 16700],
-      [17000, 200, 16900, 17100],
-      [17200, 200, 17100, 17300],
-      [17450, 200, 17350, 17550],
-      [17650, 200, 17550, 17750],
+      [8800, 360, 8700, 8900],
+      [9000, 490, 8880, 9120],
+      [9400, 340, 9300, 9500],
+      [9800, 490, 9680, 9920],
+      [10100, 340, 10000, 10200],
+      [10500, 360, 10400, 10600],
+      [10400, 490, 10300, 10500],
+      [11000, 340, 10900, 11100],
+      [11200, 490, 11100, 11300],
+      [11600, 360, 11500, 11700],
+      [11800, 340, 11700, 11900],
+      [12200, 490, 12100, 12300],
+      [12400, 320, 12300, 12500],
+      [12800, 320, 12700, 12900],
+      [13000, 300, 12900, 13100],
+      [13400, 300, 13300, 13500],
+      [13600, 320, 13500, 13700],
+      [14000, 340, 13900, 14100],
+      [14200, 280, 14100, 14300],
+      [14600, 280, 14500, 14700],
+      [14800, 340, 14700, 14900],
+      [15200, 280, 15100, 15300],
+      [15400, 260, 15300, 15500],
+      [15800, 260, 15700, 15900],
+      [16000, 280, 15900, 16100],
+      [16400, 320, 16300, 16500],
+      [16600, 260, 16500, 16700],
+      [17000, 240, 16900, 17100],
+      [17200, 300, 17100, 17300],
+      [17450, 260, 17350, 17550],
+      [17650, 240, 17550, 17750],
     ];
     // Double density by adding a second pass slightly offset
     const extraSpawns = baseSpawns.map(([x, y, l, r]) => [x + 30, y, l + 30, r + 30]);
@@ -1212,6 +1213,8 @@ class GameScene extends Phaser.Scene {
       );
       enemy.body.updateFromGameObject();
       enemy.setCollideWorldBounds(true);
+      // Clamp initial position to spawn bounds to ensure they start on their platform
+      enemy.x = Phaser.Math.Clamp(x, leftBound, rightBound);
       enemy.setData("label", type.label);
       enemy.setData("leftBound", leftBound);
       enemy.setData("rightBound", rightBound);
@@ -1229,18 +1232,20 @@ class GameScene extends Phaser.Scene {
       return enemy;
     };
     this.spawnEnemyHelper = spawnEnemy;
-    this.enemySpawnFlags = { after750: false, level2Extras: false, level3Jims1: false, level3Jims2: false };
+    this.enemySpawnFlags = {};
     this.resetEnemies = () => {
       // clear existing
       this.enemies.clear(true, true);
       this.enemyTextMap.forEach((t) => t.destroy());
       this.enemyTextMap.clear();
-      this.shortJimSpawned = false;
-      this.shortJimWaveSpawned = false;
-      this.enemySpawnFlags = { after750: false, level2Extras: false, level3Jims1: false, level3Jims2: false };
+      this.enemySpawnFlags = {};
       // respawn base enemies
       if (this.baseEnemySpawns) {
         this.baseEnemySpawns.forEach(([x, y, l, r]) => this.spawnEnemyHelper(x, y, l, r));
+      }
+      // respawn ShortJims
+      if (this.baseShortJimSpawns) {
+        this.baseShortJimSpawns.forEach(([x, y, opts]) => this.spawnShortJim(x, y, opts));
       }
       // clear leftover projectiles
       this.enemyProjectiles.clear(true, true);
@@ -1281,86 +1286,100 @@ class GameScene extends Phaser.Scene {
         // Skip large ground slabs
         if (p.displayWidth && p.displayWidth <= 180) {
           const x = p.x + Phaser.Math.Between(-10, 10);
-          const y = p.y;
-          this.spawnEnemyHelper(x, y, x - 60, x + 60);
+          // Spawn above the platform surface (platform center - half height - offset)
+          const y = p.y - 12 - 20;  // 12 = half platform height, 20 = spawn offset above
+          // Calculate patrol bounds based on platform edges with margins
+          const platformLeft = p.x - p.displayWidth / 2;
+          const platformRight = p.x + p.displayWidth / 2;
+          const leftBound = platformLeft + 20;
+          const rightBound = platformRight - 20;
+          this.spawnEnemyHelper(x, y, leftBound, rightBound);
         }
       });
     };
 
-    // Special ShortJims in Act I
-    this.spawnShortJim(2500, 360, { speed: 44 }); // ~10% faster than base monsters (40*1.1)
-    this.spawnShortJim(2700, 360);
-    this.spawnShortJim(4000, 360);
-    this.spawnShortJim(4500, 360);
+    // Special ShortJims (stored for respawn)
+    const shortJimSpawns = [
+      [2000, 360, { speed: 44 }],
+      [3000, 360, { speed: 44 }],
+      [4500, 360, { speed: 44 }],
+      [7000, 360, {}],
+      [10000, 360, {}],
+      [11000, 360, { speed: 44 }],
+      [14000, 360, {}],
+      [14500, 360, { speed: 44 }],
+      [16000, 360, {}],
+    ];
+    this.baseShortJimSpawns = shortJimSpawns;
+    shortJimSpawns.forEach(([x, y, opts]) => this.spawnShortJim(x, y, opts));
 
     // Act I/early enemies
-    spawnEnemy(180, 520, 120, 240);
-    spawnEnemy(380, 520, 320, 440);
-    spawnEnemy(700, 520, 620, 780);
-    spawnEnemy(1050, 520, 970, 1130);
-    spawnEnemy(1100, 520, 1220, 1380);
-    spawnEnemy(1101, 520, 1220, 1380);
-    spawnEnemy(1301, 520, 1220, 1380);
-    spawnEnemy(1300, 520, 1220, 1380);
-    spawnEnemy(1700, 520, 1620, 1780);
-    spawnEnemy(1500, 420, 1400, 1620);
-    spawnEnemy(1680, 420, 1600, 1760);
-    spawnEnemy(1860, 420, 1760, 1940);
-    spawnEnemy(2060, 420, 1980, 2140);
-    spawnEnemy(2300, 420, 2200, 2420);
-    spawnEnemy(2600, 420, 2500, 2720);
-    spawnEnemy(3200, 420, 3120, 3320);
-    spawnEnemy(3400, 420, 3280, 3520);
-    spawnEnemy(3800, 400, 3700, 3920);
-    spawnEnemy(4300, 400, 4200, 4420);
-    spawnEnemy(4550, 400, 4460, 4660);
-    spawnEnemy(4760, 400, 4680, 4840);
-    spawnEnemy(5200, 380, 5120, 5320);
-    spawnEnemy(5600, 360, 5500, 5720);
+  
+    spawnEnemy(1050, 490, 970, 1120);
+    //spawnEnemy(1050, 490, 970, 1120);
+    spawnEnemy(1180, 410, 1110, 1250);
+    spawnEnemy(1101, 490, 1020, 1120);
+    spawnEnemy(1301, 490, 1220, 1380);
+    spawnEnemy(1300, 490, 1220, 1380);
+    spawnEnemy(1700, 490, 1620, 1710);
+    spawnEnemy(1500, 400, 1400, 1620);
+    spawnEnemy(1680, 400, 1600, 1760);
+    spawnEnemy(1860, 400, 1760, 1940);
+    spawnEnemy(2060, 400, 1980, 2140);
+    spawnEnemy(2300, 400, 2200, 2420);
+    spawnEnemy(2600, 400, 2500, 2720);
+    spawnEnemy(3200, 400, 3120, 3320);
+    spawnEnemy(3400, 400, 3280, 3520);
+    spawnEnemy(3800, 380, 3700, 3920);
+    spawnEnemy(4300, 380, 4200, 4420);
+    spawnEnemy(4550, 380, 4460, 4660);
+    spawnEnemy(4760, 380, 4680, 4840);
+    spawnEnemy(5200, 360, 5120, 5320);
+    spawnEnemy(5600, 340, 5500, 5720);
     // Act II/III denser enemies
-    spawnEnemy(6000, 420, 5900, 6100);
+    spawnEnemy(6000, 490, 5900, 6100);
     spawnEnemy(6200, 420, 6120, 6320);
     spawnEnemy(6400, 400, 6300, 6500);
-    spawnEnemy(6600, 400, 6500, 6700);
-    spawnEnemy(6800, 380, 6680, 6920);
-    spawnEnemy(7000, 380, 6900, 7100);
+    spawnEnemy(6600, 490, 6500, 6700);
+    spawnEnemy(6800, 490, 6680, 6920);
+    spawnEnemy(7000, 370, 6900, 7100);
     spawnEnemy(7200, 360, 7100, 7300);
-    spawnEnemy(7600, 340, 7480, 7720);
-    spawnEnemy(7800, 340, 7700, 7900);
-    spawnEnemy(8000, 330, 7900, 8100);
-    spawnEnemy(8200, 360, 8080, 8320);
+    spawnEnemy(7600, 490, 7480, 7720);
+    spawnEnemy(7800, 380, 7700, 7900);
+    spawnEnemy(8000, 360, 7900, 8100);
+    spawnEnemy(8200, 490, 8080, 8320);
     spawnEnemy(8600, 340, 8480, 8720);
-    spawnEnemy(8800, 340, 8700, 8900);
-    spawnEnemy(9000, 320, 8880, 9120);
-    spawnEnemy(9400, 320, 9300, 9500);
-    spawnEnemy(9800, 320, 9680, 9920);
-    spawnEnemy(10100, 320, 10000, 10200);
-    spawnEnemy(10500, 300, 10400, 10600);
-    spawnEnemy(10400, 300, 10300, 10500);
-    spawnEnemy(11000, 300, 10900, 11100);
-    spawnEnemy(11200, 300, 11100, 11300);
-    spawnEnemy(11600, 300, 11500, 11700);
-    spawnEnemy(11800, 300, 11700, 11900);
-    spawnEnemy(12200, 280, 12100, 12300);
-    spawnEnemy(12400, 280, 12300, 12500);
-    spawnEnemy(12800, 280, 12700, 12900);
-    spawnEnemy(13000, 280, 12900, 13100);
-    spawnEnemy(13400, 260, 13300, 13500);
-    spawnEnemy(13600, 260, 13500, 13700);
-    spawnEnemy(14000, 260, 13900, 14100);
-    spawnEnemy(14200, 260, 14100, 14300);
-    spawnEnemy(14600, 240, 14500, 14700);
-    spawnEnemy(14800, 240, 14700, 14900);
-    spawnEnemy(15200, 240, 15100, 15300);
-    spawnEnemy(15400, 240, 15300, 15500);
-    spawnEnemy(15800, 220, 15700, 15900);
-    spawnEnemy(16000, 220, 15900, 16100);
-    spawnEnemy(16400, 220, 16300, 16500);
-    spawnEnemy(16600, 220, 16500, 16700);
-    spawnEnemy(17000, 200, 16900, 17100);
-    spawnEnemy(17200, 200, 17100, 17300);
-    spawnEnemy(17450, 200, 17350, 17550);
-    spawnEnemy(17650, 200, 17550, 17750);
+    spawnEnemy(8800, 360, 8700, 8900);
+    spawnEnemy(9000, 490, 8880, 9120);
+    spawnEnemy(9400, 340, 9300, 9500);
+    spawnEnemy(9800, 490, 9680, 9920);
+    spawnEnemy(10100, 340, 10000, 10200);
+    spawnEnemy(10500, 360, 10400, 10600);
+    spawnEnemy(10400, 490, 10300, 10500);
+    spawnEnemy(11000, 340, 10900, 11100);
+    spawnEnemy(11200, 490, 11100, 11300);
+    spawnEnemy(11600, 360, 11500, 11700);
+    spawnEnemy(11800, 340, 11700, 11900);
+    spawnEnemy(12200, 490, 12100, 12300);
+    spawnEnemy(12400, 320, 12300, 12500);
+    spawnEnemy(12800, 320, 12700, 12900);
+    spawnEnemy(13000, 300, 12900, 13100);
+    spawnEnemy(13400, 300, 13300, 13500);
+    spawnEnemy(13600, 320, 13500, 13700);
+    spawnEnemy(14000, 340, 13900, 14100);
+    spawnEnemy(14200, 280, 14100, 14300);
+    spawnEnemy(14600, 280, 14500, 14700);
+    spawnEnemy(14800, 340, 14700, 14900);
+    spawnEnemy(15200, 280, 15100, 15300);
+    spawnEnemy(15400, 260, 15300, 15500);
+    spawnEnemy(15800, 260, 15700, 15900);
+    spawnEnemy(16000, 280, 15900, 16100);
+    spawnEnemy(16400, 320, 16300, 16500);
+    spawnEnemy(16600, 260, 16500, 16700);
+    spawnEnemy(17000, 240, 16900, 17100);
+    spawnEnemy(17200, 300, 17100, 17300);
+    spawnEnemy(17450, 260, 17350, 17550);
+    spawnEnemy(17650, 240, 17550, 17750);
     // add extra enemies on small platforms
     this.addSmallPlatformEnemies();
   }
@@ -1680,17 +1699,33 @@ class GameScene extends Phaser.Scene {
         Math.abs(enemy.x - this.player.x) < chaseRange &&
         Math.abs(enemy.y - this.player.y) < 50;
 
-      if (chaseEnabled && nearPlayer) {
-        const dir = Math.sign(this.player.x - enemy.x) || 1;
-        enemy.body.setVelocityX(dir * (speed + 20));
-      } else {
+      // Skip movement logic for ShortJim (handled separately)
+      if (!isShortJim) {
+        // Strict boundary enforcement - never allow enemies to leave their bounds
         if (enemy.x <= leftBound) {
           dir = 1;
+          enemy.x = leftBound; // Clamp to boundary
         } else if (enemy.x >= rightBound) {
           dir = -1;
+          enemy.x = rightBound; // Clamp to boundary
         }
-        enemy.setData("dir", dir);
-        enemy.body.setVelocityX(dir * speed);
+
+        if (chaseEnabled && nearPlayer) {
+          // Chase player but respect bounds
+          const desiredDir = Math.sign(this.player.x - enemy.x) || 1;
+          // Only chase if it won't take enemy out of bounds
+          if ((desiredDir === 1 && enemy.x < rightBound) || (desiredDir === -1 && enemy.x > leftBound)) {
+            dir = desiredDir;
+            enemy.body.setVelocityX(dir * (speed + 20));
+          } else {
+            // Hit boundary while chasing, stop
+            enemy.body.setVelocityX(0);
+          }
+        } else {
+          // Normal patrol
+          enemy.setData("dir", dir);
+          enemy.body.setVelocityX(dir * speed);
+        }
       }
 
       if (isShortJim) {
@@ -1706,50 +1741,13 @@ class GameScene extends Phaser.Scene {
       }
     });
 
-    // Trigger ShortJim spawns for a tougher "level 3" feel
-    if (!this.shortJimSpawned && this.player.x > 4000) {
-      this.shortJimSpawned = true;
-      this.spawnShortJim(this.player.x - 300, this.player.y - 40);
-    }
-    if (!this.shortJimWaveSpawned && this.player.x > 12000) {
-      this.shortJimWaveSpawned = true;
-      this.spawnShortJim(this.player.x - 400, this.player.y - 40);
-      this.spawnShortJim(this.player.x - 200, this.player.y - 60);
-    }
+    // Dynamic ShortJim spawns removed - now defined statically only
 
-    // Dynamic extra spawns after early section
-    if (!this.enemySpawnFlags.after750 && this.player.x > 750) {
-      this.enemySpawnFlags.after750 = true;
-      const add = (x, y) => this.spawnEnemyHelper(x, y, x - 80, x + 80);
-      add(900, 520);
-      add(1250, 500);
-      add(1550, 480);
-      add(1850, 460);
-      add(2150, 440);
-    }
+    // All dynamic enemy spawns removed - now defined statically only
 
-    // Level 2 extra density
-    if (!this.enemySpawnFlags.level2Extras && (this.levelNumber || 1) >= 2) {
-      this.enemySpawnFlags.level2Extras = true;
-      const add = (x, y) => this.spawnEnemyHelper(x, y, x - 90, x + 90);
-      [6200, 6600, 7000, 7400, 7800, 8200, 8600, 9000].forEach((x, idx) => {
-        const y = 420 - idx * 8;
-        add(x, y);
-      });
-    }
+    // Level 2 extra density spawns removed - now defined statically only
 
-    // Level 3: more Short Jims
-    if (!this.enemySpawnFlags.level3Jims1 && (this.levelNumber || 1) >= 3 && this.player.x > 6000) {
-      this.enemySpawnFlags.level3Jims1 = true;
-      this.spawnShortJim(this.player.x - 320, this.player.y - 40);
-      this.spawnShortJim(this.player.x - 160, this.player.y - 60);
-    }
-    if (!this.enemySpawnFlags.level3Jims2 && (this.levelNumber || 1) >= 3 && this.player.x > 13000) {
-      this.enemySpawnFlags.level3Jims2 = true;
-      this.spawnShortJim(this.player.x - 480, this.player.y - 20);
-      this.spawnShortJim(this.player.x - 320, this.player.y - 40);
-      this.spawnShortJim(this.player.x - 160, this.player.y - 60);
-    }
+    // Level 3 ShortJim spawns removed - now defined statically only
   }
 
   fireShortJimProjectile(enemy) {
@@ -1760,6 +1758,8 @@ class GameScene extends Phaser.Scene {
     const vx = Math.cos(angle) * speed;
     const vy = Math.sin(angle) * speed;
     arrow.body.setVelocity(vx, vy);
+    // Flip arrow horizontally when shooting to the left
+    arrow.setFlipX(vx < 0);
     arrow.setData("baseVy", vy);
     arrow.setData("osc", { phase: Math.random() * Math.PI * 2, amp: 60 });
     arrow.setDepth(850);
