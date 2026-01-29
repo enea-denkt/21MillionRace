@@ -6,7 +6,7 @@ const PRIMARY = 0xfa660f;
 const SCALE = 1.4;
 const PLAYER_BASE_W = 44;
 const PLAYER_BASE_H = 40;
-const ENEMY_BASE = 38.8;
+const ENEMY_BASE = 32;
 const ENEMY_FOOT_SHIFT = 0;
 const PLAYER_Y_BASE = 420;
 const PLAYER_Y_OFFSET = (PLAYER_BASE_H * (SCALE - 1)) / 2;
@@ -1204,14 +1204,24 @@ class GameScene extends Phaser.Scene {
     const spawnEnemy = (x, y, leftBound, rightBound) => {
       const type = Phaser.Utils.Array.GetRandom(this.monsterTypes);
       const enemy = this.enemies.create(x, y, type.key).setOrigin(0.5, 1);
-      enemy.setDisplaySize(ENEMY_BASE * SCALE, ENEMY_BASE * SCALE);
+      enemy.setDisplaySize(ENEMY_BASE * SCALE, ENEMY_BASE * SCALE * 1.3);
+
+      // place on platform top if available (optional)
       enemy.y += ENEMY_FOOT_SHIFT;
-      enemy.body.setSize(enemy.displayWidth * 0.6, enemy.displayHeight * 0.8);
-      enemy.body.setOffset(
-        (enemy.displayWidth - enemy.body.width) / 2,
-        enemy.displayHeight - enemy.body.height - 10
-      );
+
+      // compute integer hitbox and centered offset (no magic -10)
+      const bw = Math.round(enemy.displayWidth * 0.6);
+      const bh = Math.round(enemy.displayHeight * 0.6);
+      const baseOffsetX = Math.round((enemy.displayWidth - bw) / 2);
+      const baseOffsetY = Math.round(enemy.displayHeight - bh - 13);
+
+      enemy.body.setSize(bw, bh);
+      enemy.body.setOffset(baseOffsetX, baseOffsetY);
       enemy.body.updateFromGameObject();
+
+      // ensure sprite isn't flipped by default and store hitbox for mirroring later
+      enemy.setFlipX(false);
+      enemy._hitbox = { bw, bh, baseOffsetX, baseOffsetY };
       enemy.setCollideWorldBounds(true);
       // Clamp initial position to spawn bounds to ensure they start on their platform
       enemy.x = Phaser.Math.Clamp(x, leftBound, rightBound);
@@ -1390,13 +1400,21 @@ class GameScene extends Phaser.Scene {
   createPlayer() {
     const textureKey = this.textures.exists("saylor_clean") ? "saylor_clean" : "saylor";
     this.player = this.physics.add.sprite(120, PLAYER_Y_BASE + PLAYER_Y_OFFSET, textureKey).setOrigin(0.5, 0.5);
-    //this.player.setDisplaySize(PLAYER_BASE_W * SCALE, PLAYER_BASE_H * SCALE);
-    this.player.body.setSize(this.player.displayWidth * 0.6, this.player.displayHeight);
-    this.player.body.setOffset(
-      (this.player.displayWidth - this.player.body.width) / 2,
-      this.player.displayHeight - this.player.body.height
-    );
+    this.player.setDisplaySize(PLAYER_BASE_W * SCALE * 0.80, PLAYER_BASE_H * SCALE );
+    const bw = Math.round(this.player.displayWidth );
+    const bh = Math.round(this.player.displayHeight );
+    const baseOffsetX = Math.round((this.player.displayWidth - bw) / 2);
+    const baseOffsetY = Math.round(this.player.displayHeight - bh);
+    this.player.body.setSize(bw, bh);
+    this.player.body.setOffset(baseOffsetX, baseOffsetY);
+
+    //this.player.body.setSize(this.player.displayWidth * 0.6, this.player.displayHeight);
+    //this.player.body.setOffset(
+    //  (this.player.displayWidth - this.player.body.width) / 2,
+    //  this.player.displayHeight - this.player.body.height
+    //);
     this.player.body.updateFromGameObject();
+    this.player._hitbox = { bw, bh, baseOffsetX, baseOffsetY };
     this.player.body.syncBounds = true;
     this.player.body.setCollideWorldBounds(true);
 
@@ -1616,14 +1634,17 @@ class GameScene extends Phaser.Scene {
     if (left) {
       this.player.body.setVelocityX(-200);
       this.facing = -1;
-      this.player.scaleX = -1;
+      // flip using flipX and update offset to remove asymmetry
+      this.player.setFlipX(true);
     } else if (right) {
       this.player.body.setVelocityX(200);
       this.facing = 1;
-      this.player.scaleX = 1;
+      this.player.setFlipX(false);
     } else {
       this.player.body.setVelocityX(0);
     }
+
+    
 
     const jumpPressed =
       Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
@@ -1732,7 +1753,27 @@ class GameScene extends Phaser.Scene {
       }
 
       if (isShortJim) {
-        enemy.body.setVelocityY(Phaser.Math.Clamp(this.player.y - enemy.y, -80, 80));
+        // Follow player vertically (clamped)
+        const dy = this.player.y - enemy.y;
+        enemy.body.setVelocityY(Phaser.Math.Clamp(dy, -80, 80));
+
+        // Chase player horizontally if within chaseRange, respecting bounds
+        const dx = this.player.x - enemy.x;
+        if (Math.abs(dx) < chaseRange) {
+          const desiredDir = Math.sign(dx) || 1;
+          const desiredVx = desiredDir * speed;
+          // Only move if it won't take the ShortJim out of its bounds
+          if ((desiredVx > 0 && enemy.x < rightBound) || (desiredVx < 0 && enemy.x > leftBound)) {
+            enemy.body.setVelocityX(desiredVx);
+          } else {
+            enemy.body.setVelocityX(0);
+          }
+        } else {
+          // Idle when player too far horizontally
+          enemy.body.setVelocityX(0);
+        }
+
+        // Fire periodically
         if (time - (enemy.getData("lastShot") || 0) > 1200) {
           this.fireShortJimProjectile(enemy);
           enemy.setData("lastShot", time);
@@ -1740,7 +1781,19 @@ class GameScene extends Phaser.Scene {
       }
 
       if (enemy.body.velocity.x !== 0) {
-        enemy.scaleX = Math.sign(enemy.body.velocity.x);
+        const newScaleX = Math.sign(enemy.body.velocity.x);
+        if (enemy.scaleX !== newScaleX) {
+          enemy.scaleX = newScaleX;
+          // Adjust hitbox offset when flipping
+          if (enemy._hitbox) {
+            const { bw, baseOffsetX, baseOffsetY } = enemy._hitbox;
+            if (newScaleX < 0) {
+              enemy.body.setOffset(enemy.displayWidth - baseOffsetX - bw, baseOffsetY);
+            } else {
+              enemy.body.setOffset(baseOffsetX, baseOffsetY);
+            }
+          }
+        }
       }
     });
 
@@ -2402,7 +2455,7 @@ const config = {
     default: "arcade",
     arcade: {
       gravity: { y: 1200 },
-      debug: false,
+      debug: true,
     },
   },
   scene: [GameScene],
