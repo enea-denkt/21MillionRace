@@ -1210,12 +1210,12 @@ class GameScene extends Phaser.Scene {
       enemy.y += ENEMY_FOOT_SHIFT;
 
       // compute integer hitbox and centered offset (no magic -10)
-      const bw = Math.round(enemy.displayWidth * 0.6);
+      const bw = Math.round(enemy.displayWidth * 0.8);
       const bh = Math.round(enemy.displayHeight * 0.6);
-      const baseOffsetX = Math.round((enemy.displayWidth - bw) / 2);
+      const baseOffsetX = Math.round((enemy.displayWidth - bw) / 2 );
       const baseOffsetY = Math.round(enemy.displayHeight - bh - 13);
 
-      enemy.body.setSize(bw, bh);
+      enemy.body.setSize(bw , bh);
       enemy.body.setOffset(baseOffsetX, baseOffsetY);
       enemy.body.updateFromGameObject();
 
@@ -1781,13 +1781,13 @@ class GameScene extends Phaser.Scene {
       }
 
       if (enemy.body.velocity.x !== 0) {
-        const newScaleX = Math.sign(enemy.body.velocity.x);
-        if (enemy.scaleX !== newScaleX) {
-          enemy.scaleX = newScaleX;
+        const goingLeft = enemy.body.velocity.x < 0;
+        if (enemy.flipX !== goingLeft) {
+          enemy.setFlipX(goingLeft);
           // Adjust hitbox offset when flipping
           if (enemy._hitbox) {
             const { bw, baseOffsetX, baseOffsetY } = enemy._hitbox;
-            if (newScaleX < 0) {
+            if (goingLeft) {
               enemy.body.setOffset(enemy.displayWidth - baseOffsetX - bw, baseOffsetY);
             } else {
               enemy.body.setOffset(baseOffsetX, baseOffsetY);
@@ -2455,7 +2455,7 @@ const config = {
     default: "arcade",
     arcade: {
       gravity: { y: 1200 },
-      debug: true,
+      debug: false,
     },
   },
   scene: [GameScene],
