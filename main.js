@@ -1063,67 +1063,69 @@ class GameScene extends Phaser.Scene {
     makeCoin(5400, 320);
     makeCoin(5600, 300);
     makeCoin(5800, 280);
-    // Act II / III extension
-    makeCoin(6000, 400);
-    makeCoin(6200, 420);
-    makeCoin(6400, 400);
-    makeCoin(6600, 380);
-    makeCoin(6800, 370);
-    makeCoin(7000, 360);
-    makeCoin(7200, 340);
-    makeCoin(7400, 330);
-    makeCoin(7600, 320);
-    makeCoin(7800, 310);
-    makeCoin(8000, 300);
-    makeCoin(8200, 290);
-    makeCoin(8400, 280);
-    makeCoin(8600, 280);
-    makeCoin(8800, 280);
-    makeCoin(9000, 280);
-    makeCoin(9200, 270);
-    makeCoin(9400, 270);
-    makeCoin(9600, 260);
-    makeCoin(9800, 260);
-    makeCoin(10000, 260);
-    makeCoin(10200, 250);
-    makeCoin(10400, 250);
-    makeCoin(10600, 240);
-    makeCoin(10800, 240);
-    makeCoin(11000, 240);
-    makeCoin(11200, 230);
-    makeCoin(11400, 230);
-    makeCoin(11600, 220);
-    makeCoin(11800, 220);
-    makeCoin(12000, 220);
-    makeCoin(12200, 210);
-    makeCoin(12400, 210);
-    makeCoin(12600, 200);
-    makeCoin(12800, 200);
-    makeCoin(13000, 190);
-    makeCoin(13200, 190);
-    makeCoin(13400, 180);
-    makeCoin(13600, 180);
-    makeCoin(13800, 170);
-    makeCoin(14000, 170);
-    makeCoin(14200, 160);
-    makeCoin(14400, 160);
-    makeCoin(14600, 150);
-    makeCoin(14800, 150);
-    makeCoin(15000, 140);
-    makeCoin(15200, 140);
-    makeCoin(15400, 130);
-    makeCoin(15600, 130);
-    makeCoin(15800, 120);
-    makeCoin(16000, 120);
-    makeCoin(16200, 120);
-    makeCoin(16400, 110);
-    makeCoin(16600, 110);
-    makeCoin(16800, 100);
-    makeCoin(17000, 100);
-    makeCoin(17200, 100);
-    makeCoin(17400, 90);
-    makeCoin(17600, 90);
-    makeCoin(17800, 90);
+    // Act II / III extension - coins positioned relative to platforms/ground
+    // Ground Y = 520, so ground-level coins at ~480
+    // Platform coins at platform_y - 40
+    makeCoin(6000, 480);   // ground
+    makeCoin(6200, 400);   // platform y=440
+    makeCoin(6400, 380);   // platform y=420
+    makeCoin(6600, 480);   // ground
+    makeCoin(6800, 480);   // ground
+    makeCoin(6900, 350);   // platform y=390
+    makeCoin(7200, 340);   // platform y=380
+    makeCoin(7400, 480);   // ground
+    makeCoin(7600, 480);   // ground
+    makeCoin(7800, 360);   // platform y=400
+    makeCoin(8000, 480);   // ground
+    makeCoin(8200, 480);   // ground
+    makeCoin(8400, 340);   // platform y=380
+    makeCoin(8600, 320);   // platform y=360
+    makeCoin(8800, 480);   // ground
+    makeCoin(9000, 480);   // ground
+    makeCoin(9100, 320);   // platform y=360
+    makeCoin(9400, 480);   // ground
+    makeCoin(9550, 360);   // platform y=400
+    makeCoin(9800, 480);   // ground
+    makeCoin(10000, 480);  // ground
+    makeCoin(10180, 320);  // platform y=360
+    makeCoin(10400, 480);  // ground
+    makeCoin(10600, 340);  // platform y=380
+    makeCoin(10850, 320);  // platform y=360
+    makeCoin(11000, 480);  // ground
+    makeCoin(11200, 320);  // platform y=360
+    makeCoin(11400, 340);  // platform y=380
+    makeCoin(11600, 480);  // ground
+    makeCoin(11800, 280);  // bounce platform y=320
+    makeCoin(12000, 480);  // ground
+    makeCoin(12150, 320);  // platform y=360
+    makeCoin(12400, 480);  // ground
+    makeCoin(12600, 480);  // ground
+    makeCoin(12800, 300);  // platform y=340
+    makeCoin(13000, 480);  // ground
+    makeCoin(13200, 480);  // ground
+    makeCoin(13350, 280);  // platform y=320
+    makeCoin(13600, 300);  // platform y=340
+    makeCoin(13800, 480);  // ground
+    makeCoin(14000, 480);  // ground
+    makeCoin(14050, 280);  // platform y=320
+    makeCoin(14400, 480);  // ground
+    makeCoin(14500, 260);  // platform y=300
+    makeCoin(14800, 480);  // ground
+    makeCoin(15050, 260);  // platform y=300
+    makeCoin(15200, 480);  // ground
+    makeCoin(15400, 480);  // ground
+    makeCoin(15600, 480);  // ground
+    makeCoin(15650, 240);  // platform y=280
+    makeCoin(16000, 260);  // platform y=300
+    makeCoin(16200, 240);  // platform y=280
+    makeCoin(16400, 480);  // ground
+    makeCoin(16600, 480);  // ground
+    makeCoin(16800, 220);  // platform y=260
+    makeCoin(17000, 480);  // ground
+    makeCoin(17200, 480);  // ground
+    makeCoin(17400, 220);  // platform y=260
+    makeCoin(17450, 240);  // platform y=280
+    makeCoin(17800, 480);  // ground
   }
 
   createEnemies() {
@@ -1132,75 +1134,9 @@ class GameScene extends Phaser.Scene {
     this.enemyTextMap = new Map();
     this.shortJimWaveScheduled = false;
 
-    let baseSpawns = [
-      [1050, 490, 695, 1105],        // Ground 2 (675-1125) - FIXED bounds
-      [1180, 410, 1130, 1230],       // Platform 3 (1110-1250) - FIXED bounds
-      [1101, 490, 695, 1105],        // Ground 2 (675-1125) - FIXED bounds
-      [1301, 490, 1310, 1690],       // Ground 3 (1290-1710) - FIXED bounds
-      [1300, 490, 1310, 1690],       // Ground 3 (1290-1710) - FIXED bounds
-      [1700, 380, 1650, 1750],       // Platform 4 (1630-1770) - FIXED bounds
-      [1500, 490, 1310, 1690],       // Ground 3 (1290-1710) - FIXED bounds
-      [1680, 380, 1650, 1750],       // Platform 4 (1630-1770) - FIXED bounds
-      [1860, 340, 1830, 1930],       // Platform 5 (1810-1950) - FIXED bounds
-      [2060, 300, 2010, 2110],       // Platform 6 (1990-2130) - FIXED bounds
-      [2300, 490, 2110, 2490],       // Ground 4 (2090-2510) - FIXED bounds
-      [2600, 370, 2445, 2555],       // Platform 7 (2425-2575) - FIXED bounds
-      [3200, 490, 3010, 3390],       // Ground 5 (2990-3410) - FIXED bounds
-      [3400, 490, 3010, 3390],       // Ground 5 (2990-3410) - FIXED bounds
-      [3800, 490, 3710, 4090],       // Ground 6 (3690-4110) - FIXED bounds
-      [4300, 367, 4050, 4370],       // Cable 10/11 (4030-4390) - FIXED bounds
-      [4550, 490, 4370, 4730],       // Ground 7 (4350-4750) - FIXED bounds
-      [4760, 490, 4370, 4730],       // Ground 7 (4350-4750) - FIXED bounds
-      [5200, 300, 4895, 5005],       // Platform 12 (4875-5025) - FIXED bounds
-      [5600, 300, 5545, 5655],       // Platform 13 (5525-5675) - FIXED bounds
-      [6000, 490, 5810, 6190],       // Ground 9 (5790-6210) - FIXED bounds
-      [6200, 420, 6150, 6250],       // Platform 15 (6130-6270) - FIXED bounds
-      [6400, 400, 6350, 6450],       // Platform 16 (6330-6470) - FIXED bounds
-      [6600, 490, 6610, 6990],       // Ground 10 (6590-7010) - FIXED bounds
-      [6800, 490, 6610, 6990],       // Ground 10 (6590-7010) - FIXED bounds
-      [7000, 370, 6860, 6940],       // Platform 36 (6840-6960) - FIXED bounds
-      [7200, 360, 7145, 7255],       // Platform 17 (7125-7275) - FIXED bounds
-      [7600, 490, 7410, 7790],       // Ground 11 (7390-7810) - FIXED bounds
-      [7800, 380, 7745, 7855],       // Platform 18 (7725-7875) - FIXED bounds
-      [8000, 360, 8345, 8455],       // Platform 19 (8325-8475) - FIXED bounds
-      [8200, 490, 8010, 8390],       // Ground 12 (7990-8410) - FIXED bounds
-      [8600, 340, 8560, 8640],       // Platform 37 (8540-8660) - FIXED bounds
-      [8800, 360, 8345, 8455],       // Platform 19 (8325-8475) - FIXED bounds
-      [9000, 490, 8810, 9190],       // Ground 13 (8790-9210) - FIXED bounds
-      [9400, 340, 9045, 9155],       // Platform 20 (9025-9175) - FIXED bounds
-      [9800, 490, 9610, 9990],       // Ground 14 (9590-10010) - FIXED bounds
-      [10100, 340, 10125, 10235],    // Platform 22 (10105-10255) - FIXED bounds
-      [10500, 360, 10545, 10655],    // Platform 23 (10525-10675) - FIXED bounds
-      [10400, 490, 10210, 10590],    // Ground 15 (10190-10610) - FIXED bounds
-      [11000, 340, 10795, 10905],    // Platform 24 (10775-10925) - FIXED bounds
-      [11200, 490, 11010, 11390],    // Ground 16 (10990-11410) - FIXED bounds
-      [11600, 360, 11345, 11455],    // Platform 25 (11325-11475) - FIXED bounds
-      [11800, 340, 12095, 12205],    // Platform 26 (12075-12225) - FIXED bounds
-      [12200, 490, 11810, 12190],    // Ground 17 (11790-12210) - FIXED bounds
-      [12400, 320, 12095, 12205],    // Platform 26 (12075-12225) - FIXED bounds
-      [12800, 320, 12745, 12855],    // Platform 27 (12725-12875) - FIXED bounds
-      [13000, 300, 12745, 12855],    // Platform 27 (12725-12875) - FIXED bounds
-      [13400, 300, 13300, 13400],    // Platform 28 (13280-13420) - FIXED bounds
-      [13600, 320, 13560, 13640],    // Platform 39 (13540-13660) - FIXED bounds
-      [14000, 300, 14000, 14100],    // Platform 29 (13980-14120) - FIXED bounds
-      [14200, 280, 14000, 14100],    // Platform 29 (13980-14120) - FIXED bounds
-      [14600, 280, 14450, 14550],    // Platform 30 (14430-14570) - FIXED bounds
-      [14800, 330, 14640, 14960],    // Ground 21 (14620-14980) - FIXED bounds
-      [15200, 280, 15000, 15100],    // Platform 31 (14980-15120) - FIXED bounds
-      [15400, 260, 15600, 15700],    // Platform 32 (15580-15720) - FIXED bounds
-      [15800, 260, 15600, 15700],    // Platform 32 (15580-15720) - FIXED bounds
-      [16000, 280, 15960, 16040],    // Platform 40 (15940-16060) - FIXED bounds
-      [16400, 310, 16250, 16550],    // Ground 23 (16230-16570) - FIXED bounds
-      [16600, 250, 16750, 16850],    // Platform 34 (16730-16870) - FIXED bounds
-      [17000, 240, 16750, 16850],    // Platform 34 (16730-16870) - FIXED bounds
-      [17200, 290, 17060, 17340],    // Ground 24 (17040-17360) - FIXED bounds
-      [17450, 260, 17410, 17490],    // Platform 41 (17390-17510) - FIXED bounds
-      [17650, 240, 17350, 17450],    // Platform 35 (17330-17470) - FIXED bounds
-    ];
-    // Double density by adding a second pass slightly offset
-    const extraSpawns = baseSpawns.map(([x, y, l, r]) => [x + 30, y, l + 30, r + 30]);
-    baseSpawns = baseSpawns.concat(extraSpawns);
-    this.baseEnemySpawns = baseSpawns;
+    // Enemies are spawned via individual spawnEnemy() calls below
+    // baseEnemySpawns is empty - enemies don't respawn after death (only ShortJims do)
+    this.baseEnemySpawns = [];
     const spawnEnemy = (x, y, leftBound, rightBound) => {
       const type = Phaser.Utils.Array.GetRandom(this.monsterTypes);
       const enemy = this.enemies.create(x, y, type.key).setOrigin(0.5, 1);
@@ -1313,15 +1249,23 @@ class GameScene extends Phaser.Scene {
 
     // Special ShortJims (stored for respawn)
     const shortJimSpawns = [
+      // Act I
       [2000, 360, { speed: 44 }],
       [3000, 360, { speed: 44 }],
       [4500, 360, { speed: 44 }],
+      // Act II
       [7000, 360, {}],
       [10000, 360, {}],
       [11000, 360, { speed: 44 }],
-      [14000, 360, {}],
-      [14500, 360, { speed: 44 }],
-      [16000, 360, {}],
+      // Act III - more ShortJims with Y adjusted for platforms
+      [12500, 480, {}],              // ground level
+      [12600, 480, { speed: 44 }],   // ground level
+      [14300, 480, {}],              // ground level
+      [14600, 260, { speed: 44 }],   // near platform y=300
+      [14750, 240, { speed: 44 }],   // near platform y=280
+      [16000, 260, {}],              // near platform y=300
+      [16800, 220, { speed: 44 }],   // near platform y=260
+      [17400, 220, {}],              // near platform y=260
     ];
     this.baseShortJimSpawns = shortJimSpawns;
     shortJimSpawns.forEach(([x, y, opts]) => this.spawnShortJim(x, y, opts));
@@ -1418,13 +1362,15 @@ class GameScene extends Phaser.Scene {
     this.player.body.syncBounds = true;
     this.player.body.setCollideWorldBounds(true);
 
-    // TEMP for testing: spawn near the end for testing. Toggle TEST_SPAWN_NEAR_END.
-    // if (TEST_SPAWN_NEAR_END) {
-    //   const testX = 17500;
-    //   const testY = 260; // adjust if needed
-    //   this.player.setPosition(testX, testY);
-    //   this.checkpointPos = { x: testX, y: testY };
-    // }
+    // DEBUG: spawn after HODL Level 2 for testing
+    const DEBUG_SPAWN = false;
+    if (DEBUG_SPAWN) {
+      const testX = 12100; // right after HODL Level 2
+      const testY = 490;   // ground level
+      this.player.setPosition(testX, testY);
+      this.checkpointPos = { x: testX, y: testY };
+      this.levelNumber = 3;
+    }
     this.player.body.onWorldBounds = true;
 
     this.playerShadow = this.add.image(this.player.x, this.player.y, "player_shadow")
