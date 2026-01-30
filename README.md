@@ -1,17 +1,17 @@
-# 21 Million Race
+# 21 Million Race - The Bitcoin Arcade Game
 
 ![21 Million Race](assets/Game.png)
 
-Help Michael Saylor from Strategy on his journey across Digital Manhattan! A free Bitcoin-themed arcade platformer where you battle altcoins and Short Jim, collect sats, and race to stack 21 million.
+Help Strategy's Michael Saylor on his journey across Digital Manhattan! A free Bitcoin-themed arcade platformer where you battle altcoins and Short Jim, collect sats, and race to stack 21 million.
 
 ## Play Now
 
-Open `index.html` in your browser to play.
+Click [here](https://enea-denkt.github.io/21MillionRace/) in your browser to play.
 
 ## Features
 
 - **Laser Eyes** - Press E to activate laser eyes and defeat enemies
-- **Battle Fiat Villains** - Fight against altcoins and Short Jim trying to stop your Bitcoin stack
+- **Battle Altcoins & Wall Street Villains** - Fight against altcoins and Short Jim trying to stop your Bitcoin stack
 - **Collect Satoshis** - Race to accumulate 21 million sats
 - **Retro Pixel Art** - Classic arcade-style graphics with smooth platformer controls
 - **Original Soundtrack** - Bitcoin-themed music by [@lilbubble](https://x.com/lilbubble)
@@ -51,7 +51,7 @@ Whether you're a seasoned Bitcoiner or just discovering the world of sound money
 
 Want to see new worlds and characters? Support the development with Bitcoin!
 
-![Bitcoin Donation QR Code](assets/QR%20code.jpg)
+<img src="assets/QR%20code.jpg" alt="Bitcoin Donation QR Code" width="200">
 
 Scan the QR code above to donate Bitcoin and help fund future updates.
 
