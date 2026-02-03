@@ -3,17 +3,91 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <title>21 Million Race</title>
+    <title>21 Million Race - Bitcoin Arcade Game | Play Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play 21 Million Race, a free Bitcoin-themed arcade platformer. Help Michael Saylor from Strategy on his journey across Digital Manhattan. Battle altcoins and Short Jim, collect sats, and race to stack 21 million. Features laser eyes, pixel art graphics, and original Bitcoin music." />
+    <meta name="keywords" content="Bitcoin game, crypto game, 21 million, Bitcoin arcade, platformer game, free browser game, Bitcoin meme game, laser eyes, Michael Saylor game, stack sats, Bitcoin runner" />
+    <meta name="author" content="@EneaDenkt" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#F7931A" />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="21 Million Race - Bitcoin Arcade Game" />
+    <meta property="og:description" content="Help Michael Saylor from Strategy on his journey across Digital Manhattan. Battle altcoins and Short Jim, collect sats, and race to 21 million!" />
+    <meta property="og:image" id="og-image" content="assets/Game.png" />
+    <meta property="og:site_name" content="21 Million Race" />
+    <meta property="og:url" id="og-url" content="" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="21 Million Race - Bitcoin Arcade Game" />
+    <meta name="twitter:description" content="Help Michael Saylor from Strategy on his journey across Digital Manhattan. Battle altcoins and Short Jim, collect sats, and race to 21 million!" />
+    <meta name="twitter:image" id="twitter-image" content="assets/Game.png" />
+    <meta name="twitter:creator" content="@EneaDenkt" />
+
+    <!-- Structured Data for Search Engines and AI -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "21 Million Race",
+      "url": "",
+      "image": "assets/Game.png",
+      "description": "Help Michael Saylor from Strategy on his journey across Digital Manhattan. A free Bitcoin-themed arcade platformer where you battle altcoins and Short Jim, collect satoshis, and race to stack 21 million. Features laser eyes, pixel art graphics, and original music.",
+      "genre": ["Arcade", "Platformer", "Action"],
+      "gamePlatform": "Web Browser",
+      "applicationCategory": "Game",
+      "operatingSystem": "Any (Browser-based)",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "EneaDenkt",
+        "url": "https://x.com/EneaDenkt"
+      },
+      "keywords": "Bitcoin, cryptocurrency, arcade game, platformer, laser eyes, 21 million, stack sats, free game, browser game"
+    }
+    </script>
+
+    <link rel="canonical" id="canonical-url" href="" />
     <link rel="icon" href="assets/Saylor.png" type="image/png" />
-    <link rel="stylesheet" href="style.css?v=20260128-1705" />
+
+    <!-- Dynamic URL script for SEO -->
+    <script>
+      (function() {
+        var base = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+        var fullUrl = window.location.href.split('?')[0].split('#')[0];
+
+        // Update canonical and OG URLs
+        document.getElementById('canonical-url').href = fullUrl;
+        document.getElementById('og-url').content = fullUrl;
+        document.getElementById('og-image').content = base + '/assets/Game.png';
+        document.getElementById('twitter-image').content = base + '/assets/Game.png';
+
+        // Update JSON-LD with dynamic URL
+        var ldScript = document.querySelector('script[type="application/ld+json"]');
+        if (ldScript) {
+          var ld = JSON.parse(ldScript.textContent);
+          ld.url = fullUrl;
+          ld.image = base + '/assets/Game.png';
+          ldScript.textContent = JSON.stringify(ld);
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="style.css?v=20260128-1740" />
   </head>
   <body>
     <div class="layout">
       <div id="loader" class="loader">
         <span class="loader-dot">Loading…</span>
       </div>
-      <div class="hud-tip mobile-only">Press E for laser eyes • Double-tap ↑ to jump higher</div>
-      <div id="mobile-fs-btn" class="mobile-only" aria-hidden="false" style="display:none">
+      <div class="hud-tip desktop-only">Press E for laser eyes • Double-tap ▲ to jump higher</div>
+      <div id="mobile-fs-btn" class="mobile-only" aria-hidden="false">
         <img src="assets/Rotate screen.svg" alt="Rotate" class="rotate-icon" />
         <span class="rotate-label">Rotate to play</span>
       </div>
@@ -25,6 +99,27 @@
         </div>
       </div>
       </div>
+
+      <!-- SEO Content (visually hidden, accessible to search engines) -->
+      <article class="seo-content" aria-hidden="true">
+        <h1>21 Million Race - Free Bitcoin Arcade Game</h1>
+        <p>Help Michael Saylor from Strategy on his journey across Digital Manhattan! Welcome to 21 Million Race, the ultimate Bitcoin-themed arcade platformer game. In this action-packed browser game, you play as the legendary Bitcoin advocate on a mission to stack sats and defeat fiat currency enemies.</p>
+        <h2>Game Features</h2>
+        <ul>
+          <li>Iconic laser eyes power-up inspired by Bitcoin Twitter culture</li>
+          <li>Battle against fiat villains trying to stop your Bitcoin stack</li>
+          <li>Collect satoshis and race to accumulate 21 million</li>
+          <li>Retro pixel art graphics with smooth platformer controls</li>
+          <li>Original Bitcoin-themed soundtrack by @lilbubble</li>
+          <li>Free to play directly in your web browser</li>
+          <li>Works on desktop and mobile devices</li>
+        </ul>
+        <h2>How to Play</h2>
+        <p>Use arrow keys or WASD to move and jump. Press E to activate laser eyes. On mobile, use the on-screen controls. Double-tap up to jump higher. Avoid enemies or defeat them with your laser eyes while collecting as many satoshis as possible.</p>
+        <h2>About Bitcoin and 21 Million</h2>
+        <p>The game's name references Bitcoin's fixed supply cap of 21 million coins, making it the hardest money ever created. Join the race to stack sats before the supply runs out!</p>
+      </article>
+
       <div class="credits">
         <div class="credit-line game-credit">Game by <a href="https://x.com/EneaDenkt" target="_blank" rel="noopener">@EneaDenkt</a></div>
         <div class="credit-line music-credit music-credit">
@@ -51,7 +146,7 @@
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <script src="main.js?v=20260128-1720"></script>
+    <script src="main.js?v=20260130-1131"></script>
     <!-- 100% privacy-first analytics -->
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
   </body>
