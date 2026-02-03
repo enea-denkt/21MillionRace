@@ -79,12 +79,25 @@
         }
       })();
     </script>
-    <link rel="stylesheet" href="style.css?v=20260128-1740" />
+    <link rel="stylesheet" href="style.css?v=20260203-1300" />
   </head>
   <body>
     <div class="layout">
       <div id="loader" class="loader">
         <span class="loader-dot">Loading…</span>
+      </div>
+      <div id="character-select" class="character-select-overlay">
+        <h2 class="character-select-title">Choose Your Character</h2>
+        <div class="character-options">
+          <div class="character-option" data-character="Saylor">
+            <img src="assets/Saylor%20avatar.png" alt="Saylor" class="character-avatar" />
+            <span class="character-name">Saylor</span>
+          </div>
+          <div class="character-option" data-character="Dylan">
+            <img src="assets/Dylan%20avatar.png" alt="Dylan" class="character-avatar" />
+            <span class="character-name">Dylan</span>
+          </div>
+        </div>
       </div>
       <div class="hud-tip desktop-only">Press E for laser eyes • Double-tap ▲ to jump higher</div>
       <div id="mobile-fs-btn" class="mobile-only" aria-hidden="false">
@@ -146,7 +159,7 @@
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <script src="main.js?v=20260130-1131"></script>
+    <script src="main.js?v=20260203-1300"></script>
     <!-- 100% privacy-first analytics -->
     <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
   </body>

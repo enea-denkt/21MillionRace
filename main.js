@@ -188,6 +188,77 @@ class GameScene extends Phaser.Scene {
     this.forceMobileFullscreen = false;
     this.fsAttempted = false;
     this.wasPausedByVisibility = false;
+    this.selectedCharacter = null;
+  }
+
+  showCharacterSelection() {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById("character-select");
+      if (!overlay) {
+        // Fallback to Saylor if overlay not found
+        this.selectedCharacter = "Saylor";
+        resolve("Saylor");
+        return;
+      }
+
+      // Show the overlay
+      overlay.style.display = "flex";
+      overlay.classList.remove("hidden");
+
+      const options = overlay.querySelectorAll(".character-option");
+      const handleSelection = (event) => {
+        const option = event.currentTarget;
+        const character = option.dataset.character;
+
+        // Store selection for this session
+        this.selectedCharacter = character;
+
+        // Remove listeners
+        options.forEach(opt => {
+          opt.removeEventListener("click", handleSelection);
+          opt.removeEventListener("touchend", handleSelection);
+        });
+
+        // Hide overlay with animation
+        overlay.classList.add("hidden");
+        setTimeout(() => overlay.style.display = "none", 400);
+
+        resolve(character);
+      };
+
+      // Add both click and touchend for mobile support
+      options.forEach(option => {
+        option.addEventListener("click", handleSelection);
+        option.addEventListener("touchend", (e) => {
+          e.preventDefault();
+          handleSelection(e);
+        });
+      });
+    });
+  }
+
+  getSelectedCharacterTexture() {
+    const char = this.selectedCharacter || "Saylor";
+    const key = char.toLowerCase();
+    const cleanKey = `${key}_clean`;
+    return this.textures.exists(cleanKey) ? cleanKey : key;
+  }
+
+  getSelectedBackgroundTexture() {
+    const char = this.selectedCharacter || "Saylor";
+    // Dylan uses Tokyo background, Saylor uses Manhattan
+    return char === "Dylan" ? "bg_tokyo" : "bg_manhattan";
+  }
+
+  applyCharacterBackground() {
+    if (!this.bgImage) return;
+    const bgKey = this.getSelectedBackgroundTexture();
+    this.bgImage.setTexture(bgKey);
+    // Recalculate scale for new texture
+    const texW = this.bgImage.width || 1;
+    const texH = this.bgImage.height || 1;
+    const scale = Math.max(WIDTH / texW, HEIGHT / texH);
+    this.bgImage.setDisplaySize(texW * scale, texH * scale);
   }
 
   tryEnterFullscreen() {
@@ -332,8 +403,12 @@ class GameScene extends Phaser.Scene {
   }
 
   preload() {
+    // Character sprites
     this.load.image("saylor", "assets/Saylor.png");
+    this.load.image("dylan", "assets/Dylan.png");
+    // Background images (selected based on character)
     this.load.image("bg_manhattan", "assets/background-digital-manhattan.png");
+    this.load.image("bg_tokyo", "assets/background-tokyo-space.png");
     this.load.image("shortjim", "assets/ShortJim.png");
     this.load.image("qr_cta", "assets/QR code.jpg");
     this.load.audio("bgm", "assets/We call them poor.mp3");
@@ -451,9 +526,26 @@ class GameScene extends Phaser.Scene {
     };
     this.input.once("pointerdown", unlock);
     this.input.keyboard?.once("keydown", unlock);
-    this.startIntro();
+
+    // Pause physics until character is selected
+    this.physics.pause();
+
+    // Show character selection, then start intro
     const loader = document.getElementById("loader");
     if (loader) loader.style.display = "none";
+
+    this.showCharacterSelection().then(() => {
+      // Update player texture with selected character
+      const textureKey = this.getSelectedCharacterTexture();
+      this.player.setTexture(textureKey);
+
+      // Update background based on selected character
+      this.applyCharacterBackground();
+
+      // Resume physics and start intro
+      this.physics.resume();
+      this.startIntro();
+    });
     this.applyViewportScale();
     window.addEventListener("resize", () => this.applyViewportScale());
     window.addEventListener("orientationchange", () => {
@@ -505,6 +597,11 @@ class GameScene extends Phaser.Scene {
 
       // Prevent all zoom gestures on the entire document
       const preventZoom = (e) => {
+        // Allow touch on character selection overlay
+        const charSelect = document.getElementById("character-select");
+        if (charSelect && charSelect.contains(e.target) && !charSelect.classList.contains("hidden")) {
+          return;
+        }
         if (e.touches && e.touches.length > 1) {
           // Prevent pinch zoom
           e.preventDefault();
@@ -759,12 +856,12 @@ class GameScene extends Phaser.Scene {
     tex.refresh();
   }
 
-  processSaylorTexture() {
-    if (!this.textures.exists("saylor") || this.textures.exists("saylor_clean")) {
+  processCharacterTexture(sourceKey, cleanKey) {
+    if (!this.textures.exists(sourceKey) || this.textures.exists(cleanKey)) {
       return;
     }
-    const src = this.textures.get("saylor").getSourceImage();
-    const canvas = this.textures.createCanvas("saylor_clean", src.width, src.height);
+    const src = this.textures.get(sourceKey).getSourceImage();
+    const canvas = this.textures.createCanvas(cleanKey, src.width, src.height);
     const ctx = canvas.getContext();
     ctx.drawImage(src, 0, 0);
     const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -779,6 +876,11 @@ class GameScene extends Phaser.Scene {
     }
     ctx.putImageData(img, 0, 0);
     canvas.refresh();
+  }
+
+  processSaylorTexture() {
+    this.processCharacterTexture("saylor", "saylor_clean");
+    this.processCharacterTexture("dylan", "dylan_clean");
   }
 
   createSkylineTexture(key, baseColor, highlightColor, step, variance) {
@@ -1342,7 +1444,8 @@ class GameScene extends Phaser.Scene {
   }
 
   createPlayer() {
-    const textureKey = this.textures.exists("saylor_clean") ? "saylor_clean" : "saylor";
+    // Use selected character if available, otherwise default to saylor
+    const textureKey = this.getSelectedCharacterTexture();
     this.player = this.physics.add.sprite(120, PLAYER_Y_BASE + PLAYER_Y_OFFSET, textureKey).setOrigin(0.5, 0.5);
     this.player.setDisplaySize(PLAYER_BASE_W * SCALE * 0.80, PLAYER_BASE_H * SCALE );
     const bw = Math.round(this.player.displayWidth );

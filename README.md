@@ -49,7 +49,7 @@ Whether you're a seasoned Bitcoiner or just discovering the world of sound money
 
 ## Support the Game
 
-Want to see new worlds and characters? Support the development with Bitcoin!
+Want to see new worlds, characters and super powers? Support the development with Bitcoin!
 
 <img src="assets/QR%20code.jpg" alt="Bitcoin Donation QR Code" width="200">
 
